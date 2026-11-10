@@ -7,6 +7,7 @@
 
 use anyhow::Result;
 use demo::*;
+use near_workspaces::AccountId;
 use demerit::model::Status;
 use serde_json::json;
 
@@ -16,17 +17,49 @@ async fn main() -> Result<()> {
     let mut table = Table::new();
     let mut ledger = Ledger::default();
 
-    step1_issue(&fx, &mut table, &mut ledger).await?;
-    step2_clean(&fx, &mut table).await?;
-    step3_medium(&fx, &mut table).await?;
-    step4_regeneration(&fx, &mut table).await?;
-    step5_severe(&fx, &mut table).await?;
-    let open_mission = step6_suspended(&fx, &mut table).await?;
-    step7_identity(&fx, &mut table).await?;
-    step8_reinstated(&fx, &mut table, &mut ledger, open_mission).await?;
-    step9_soulbound(&fx, &mut table).await?;
+    // Invariant I2 is re-checked after every step, as the spec requires, not
+    // only once at the end.
+    let holders = [fx.lea.id(), fx.lea2.id(), fx.client.id(), fx.agent.id(), fx.issuer.id()];
+    let mut balanced = 0u8;
+    let mut steps = 0u8;
+    macro_rules! run {
+        ($step:expr) => {{
+            $step.await?;
+            steps += 1;
+            if invariant_holds(&fx, &ledger, &holders).await? {
+                balanced += 1;
+            }
+        }};
+    }
 
-    let books = check_funds(&fx, &mut ledger).await?;
+    run!(step1_issue(&fx, &mut table, &mut ledger));
+    run!(step2_clean(&fx, &mut table));
+    run!(step3_medium(&fx, &mut table));
+    run!(step4_regeneration(&fx, &mut table));
+    run!(step5_severe(&fx, &mut table));
+    let open_mission = {
+        let mut m = 0u64;
+        let fut = async {
+            m = step6_suspended(&fx, &mut table).await?;
+            Ok::<(), anyhow::Error>(())
+        };
+        run!(fut);
+        m
+    };
+    run!(step7_identity(&fx, &mut table));
+    run!(step8_reinstated(&fx, &mut table, &mut ledger, open_mission));
+    run!(step9_soulbound(&fx, &mut table));
+
+    table.verdict(
+        "I2 conservation",
+        format!("équilibré après chaque étape ({steps})"),
+        vec![(
+            balanced == steps,
+            format!("{balanced}/{steps} étapes équilibrées"),
+        )],
+    );
+
+    let books = check_funds(&fx, &mut ledger, &holders).await?;
     table.print();
     println!("{}", books.line);
     let ok = table.all_ok() && books.ok;
@@ -307,8 +340,9 @@ struct Books {
     line: String,
 }
 
-/// Withdraw the client's compensation, then check invariant I2 of the ABI.
-async fn check_funds(fx: &Fixture, ledger: &mut Ledger) -> Result<Books> {
+/// Withdraw the client's compensation, then check invariant I2 of the ABI a
+/// last time with the escrow included: every posted mission must be closed.
+async fn check_funds(fx: &Fixture, ledger: &mut Ledger, holders: &[&AccountId]) -> Result<Books> {
     let credit = credit_of(fx, fx.client.id()).await?;
     if credit > 0 {
         let withdrawn = call_ok(&fx.client, fx.registry.id(), "withdraw", json!({}), 0).await?;
@@ -316,34 +350,21 @@ async fn check_funds(fx: &Fixture, ledger: &mut Ledger) -> Result<Books> {
             ledger.withdraw(credit);
         }
     }
-    let holders = [
-        fx.lea.id(),
-        fx.lea2.id(),
-        fx.client.id(),
-        fx.agent.id(),
-        fx.issuer.id(),
-    ];
-    let mut credits = 0u128;
-    for holder in holders {
-        credits = credits.saturating_add(credit_of(fx, holder).await?);
-    }
-    let bonds = status_of(fx, fx.lea.id()).await?.bond;
+    let held = registry_held(fx, holders).await?;
     let fund = fund_of(fx).await?;
     // `escrowed` is not part of the frozen ABI: the demo closes every mission it
     // posts, so a missing view is read as "nothing in progress".
     let escrowed = amount_view(&fx.worker, fx.missions.id(), "escrowed", json!({}))
         .await
         .unwrap_or(0);
-    let held = bonds + fund + credits + escrowed;
     let expected = ledger.deposits.saturating_sub(ledger.withdrawals);
     let ok = held == expected && escrowed == 0;
     let line = format!(
-        "funds: bonds {} + fonds {} + crédits {} + missions {} = {} | versements {} - retraits {} = {} -> {}",
-        near(bonds),
+        "funds: fonds {} + cautions et crédits {} + missions {} = {} | versements {} - retraits {} = {} -> {}",
         near(fund),
-        near(credits),
+        near(held.saturating_sub(fund)),
         near(escrowed),
-        near(held),
+        near(held + escrowed),
         near(ledger.deposits),
         near(ledger.withdrawals),
         near(expected),

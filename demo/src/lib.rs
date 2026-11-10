@@ -6,7 +6,7 @@
 //!
 //! Shared rules:
 //! - state changes are signed by the real user, never by the contract;
-//! - time moves with `fast_forward`, never with `sleep`;
+//! - time moves by producing blocks, never with `sleep`;
 //! - lazy callbacks are observed by forcing blocks and re-probing views.
 
 use std::path::PathBuf;
@@ -15,7 +15,7 @@ use anyhow::{anyhow, bail, ensure};
 use near_workspaces::network::Sandbox;
 use near_workspaces::result::ExecutionFinalResult;
 use near_workspaces::types::NearToken;
-use near_workspaces::{Account, AccountId, Contract, Worker};
+pub use near_workspaces::{Account, AccountId, Contract, Worker};
 use demerit::model::{Rules, Status, StatusView};
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
@@ -294,10 +294,7 @@ pub async fn status_settled(
         if want(&last) {
             return Ok(last);
         }
-        fx.worker
-            .fast_forward(1)
-            .await
-            .map_err(|e| anyhow!("ff: {e}"))?;
+        tick(fx).await?;
         last = status_of(fx, account).await?;
     }
     bail!(
@@ -305,6 +302,31 @@ pub async fn status_settled(
         last.points,
         last.missions_ok
     )
+}
+
+/// Registry-side conservation (invariant I2 of docs/ABI.md): what the registry
+/// still holds (bonds + guarantee fund + withdrawable credits) must equal what
+/// was paid in minus what was paid out. Mission rewards escrowed by the
+/// platform are accounted on its own side, never here.
+pub async fn registry_held(fx: &Fixture, holders: &[&AccountId]) -> anyhow::Result<u128> {
+    let mut held = fund_of(fx).await?;
+    for holder in holders {
+        held = held.saturating_add(credit_of(fx, holder).await?);
+        if let Ok(status) = status_of(fx, holder).await {
+            held = held.saturating_add(status.bond);
+        }
+    }
+    Ok(held)
+}
+
+/// True when the books balance, checked after every step of the scenario.
+pub async fn invariant_holds(
+    fx: &Fixture,
+    ledger: &Ledger,
+    holders: &[&AccountId],
+) -> anyhow::Result<bool> {
+    let held = registry_held(fx, holders).await?;
+    Ok(held == ledger.deposits.saturating_sub(ledger.withdrawals))
 }
 
 pub async fn fund_of(fx: &Fixture) -> anyhow::Result<u128> {
@@ -328,6 +350,13 @@ pub async fn clock(fx: &Fixture) -> anyhow::Result<u64> {
         .map_err(|e| anyhow!("parse clock {raw}: {e}"))
 }
 
+/// Produce one block. `worker.fast_forward` is unreliable on this sandbox
+/// binary, and one transaction is one block, which is one second of chain time.
+pub async fn tick(fx: &Fixture) -> anyhow::Result<()> {
+    let _ = fx.issuer.call(fx.registry.id(), "categories").transact().await;
+    Ok(())
+}
+
 /// Advance the chain clock. The sandbox produces one block per transaction, so
 /// time is bought with transactions: each no-op call moves the clock forward.
 pub async fn advance_until(fx: &Fixture, target_ns: u64) -> anyhow::Result<u64> {
@@ -340,12 +369,7 @@ pub async fn advance_until(fx: &Fixture, target_ns: u64) -> anyhow::Result<u64> 
         if now >= target_ns {
             return Ok(now);
         }
-        // A call that changes nothing still produces a block, and a block is a second.
-        let _ = fx
-            .issuer
-            .call(fx.registry.id(), "categories")
-            .transact()
-            .await;
+        tick(fx).await?;
     }
     let final_now = clock(fx).await?;
     if final_now >= target_ns {
@@ -470,10 +494,7 @@ pub async fn attempt_accept(
         if state != "open" {
             break;
         }
-        fx.worker
-            .fast_forward(1)
-            .await
-            .map_err(|e| anyhow!("ff: {e}"))?;
+        tick(fx).await?;
         state = mission_state(fx, mission_id).await?;
     }
     Ok(Attempt {

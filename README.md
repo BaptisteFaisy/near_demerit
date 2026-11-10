@@ -40,7 +40,7 @@ All steps execute deterministically without secrets.
 | 1 | `make setup` | Installs wasm target, fetches crates, runs build | Toolchain ready, `BUILD OK` | ~1-3 min first run |
 | 2 | `make build` | Compiles `demerit` and `missions` contracts to wasm32 | `BUILD OK` (`target/.../release/*.wasm`) | ~15 s |
 | 3 | `make test` | Runs the unit tests (rules engine + contract with simulated clock) | `18 passed; 0 failed` | ~10 s |
-| 4 | `make demo` | Runs the 9-step sandbox scenario (1 month = 2 s) | Formatted table, `DEMO OK (9/9)` | ~50 s |
+| 4 | `make demo` | 9-step sandbox scenario (1 month = 2 s); the money invariant is re-checked after every step | `DEMO OK (10/10)` | ~60 s |
 | 5 | `make attack` | Executes 7 unauthorized / abusive operations | 7 rejected transactions, `ATTACK OK (7/7)` | ~20 s |
 | 6 | `make sim` | Simulates 5 autonomous agents over 24 months | Summary table, `SIM OK (5/5)` + invariant I2 | ~30 s |
 | 7 | `make web` | Serves the public query and dashboard page locally | HTTP server listening on `http://127.0.0.1:8080` | instant |
