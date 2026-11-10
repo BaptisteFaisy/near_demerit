@@ -207,7 +207,14 @@ impl Permis {
         self.check_against(&account, &category, &requirements)
     }
 
-    pub fn license_view(&self, account: AccountId, category: String) -> License {
+    /// The full stored licence, by token id (NEP-171 `nft_token` is the
+    /// computed view; this one is the raw record).
+    pub fn license(&self, token_id: String) -> License {
+        self.tokens.get(&token_id).expect(ERR_NO_LICENSE)
+    }
+
+    /// The live licence of a holder in a category, raw record included.
+    pub fn license_of(&self, account: AccountId, category: String) -> License {
         self.live(&account, &category)
     }
 
@@ -315,11 +322,3 @@ impl Permis {
 }
 
 pub use near_sdk::json_types::U64;
-
-#[cfg(test)]
-mod sanity {
-    #[test]
-    fn crate_compiles() {
-        assert!(true);
-    }
-}

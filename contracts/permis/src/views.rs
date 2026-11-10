@@ -58,6 +58,17 @@ pub struct CategoryView {
     pub rules: Vec<Rules>,
 }
 
+/// Everything the eligibility check needs, bundled so the helper stays readable.
+struct CheckCtx<'a> {
+    license: &'a License,
+    e: &'a rules::Effective,
+    status: Status,
+    required: u128,
+    now: u64,
+    rules: &'a Rules,
+    dossier: &'a Dossier,
+}
+
 impl Permis {
     /// The licence of `account`, following a delegation when there is one.
     pub fn resolve(&self, account: &AccountId, category: &str) -> Result<AccountId, String> {
@@ -146,8 +157,16 @@ impl Permis {
         let dossier = self.dossier(&license.identity);
         let status = rules::status(&license, &rules, &e, now);
         let required = rules::required_bond(category_def.base_bond, dossier.coefficient);
-        let failure =
-            self.first_failure(&license, &e, &status, required, req, now, &rules, &dossier);
+        let ctx = CheckCtx {
+            license: &license,
+            e: &e,
+            status,
+            required,
+            now,
+            rules: &rules,
+            dossier: &dossier,
+        };
+        let failure = self.first_failure(&ctx, req);
         CheckResult {
             allowed: failure.is_none(),
             code: failure,
@@ -156,17 +175,16 @@ impl Permis {
         }
     }
 
-    fn first_failure(
-        &self,
-        license: &License,
-        e: &rules::Effective,
-        status: &Status,
-        required: u128,
-        req: &Requirements,
-        now: u64,
-        rules: &Rules,
-        dossier: &Dossier,
-    ) -> Option<String> {
+    fn first_failure(&self, ctx: &CheckCtx, req: &Requirements) -> Option<String> {
+        let CheckCtx {
+            license,
+            e,
+            status,
+            required,
+            now,
+            rules,
+            dossier,
+        } = *ctx;
         let code = match status {
             Status::Revoked => ERR_LICENSE_REVOKED,
             Status::Renounced => ERR_NO_LICENSE,

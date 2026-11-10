@@ -74,7 +74,7 @@ pub fn issue(permis: &mut Permis, account: AccountId, category: String, identity
     let token_id = license.token_id.clone();
     register_license(permis, &account, &token_id, license, required, deposit);
     events::license_issued(
-        &account.to_string(),
+        account.as_ref(),
         &category,
         &identity,
         rules.probation_points,
@@ -200,7 +200,7 @@ pub fn strike_platform(permis: &mut Permis, account: &AccountId) {
     }
     let suspended = !platform.active;
     permis.platforms.insert(account, &platform);
-    events::platform_struck(&account.to_string(), platform.warnings, suspended);
+    events::platform_struck(account.as_ref(), platform.warnings, suspended);
 }
 
 pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String, upheld: bool) {
@@ -244,7 +244,7 @@ pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String
     }
     permis.save(license);
     permis.contests.insert(&ckey, &contest);
-    events::contest_resolved(&claimant.to_string(), &category, &mission_id, upheld);
+    events::contest_resolved(claimant.as_ref(), &category, &mission_id, upheld);
     if !upheld {
         strike_platform(permis, &platform);
     }

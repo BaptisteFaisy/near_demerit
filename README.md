@@ -28,11 +28,11 @@ All steps execute deterministically without secrets.
 
 | # | Command | What it does | Expected output | Approx. time |
 |---|---|---|---|---|
-| 1 | `make setup` | Installs wasm target, fetches crates, runs build | Toolchain ready, `BUILD OK` | ~45 s |
+| 1 | `make setup` | Installs wasm target, fetches crates, runs build | Toolchain ready, `BUILD OK` | ~1-3 min first run |
 | 2 | `make build` | Compiles `permis` and `missions` contracts to wasm32 | `BUILD OK` (`target/.../release/*.wasm`) | ~15 s |
-| 3 | `make test` | Runs the unit tests (pure rules engine, no chain needed) | `test result: ok.` for every suite, zero failures | ~5 s |
-| 4 | `make demo` | Runs the 9-step sandbox scenario (1 month = 10 s) | Formatted table, `DEMO OK (9/9)` | ~90 s |
-| 5 | `make attack` | Executes 7 unauthorized / abusive operations | 7 rejected transactions, `ATTACK OK (7/7)` | ~40 s |
+| 3 | `make test` | Runs the unit tests (rules engine + contract with simulated clock) | `18 passed; 0 failed` | ~10 s |
+| 4 | `make demo` | Runs the 9-step sandbox scenario (1 month = 2 s) | Formatted table, `DEMO OK (9/9)` | ~50 s |
+| 5 | `make attack` | Executes 7 unauthorized / abusive operations | 7 rejected transactions, `ATTACK OK (7/7)` | ~20 s |
 | 6 | `make sim` | Simulates 5 autonomous agents over 24 months | Summary table, `SIM OK (5/5)` + invariant I2 | ~30 s |
 | 7 | `make web` | Serves the public query and dashboard page locally | HTTP server listening on `http://127.0.0.1:8080` | instant |
 | 8 | `make web-smoke`| Headless validation of the static web interface | `WEB OK` | ~5 s |

@@ -4,6 +4,8 @@
 > les démos, la page web et les tests s'écrivent contre ce document.
 
 Tous les temps sont des **nanosecondes** (`env::block_timestamp()`).
+Tous les montants en yoctoNEAR circulent en **chaînes décimales** (JSON n'a pas d'entier 128 bits) ;
+les deux champs `Rules.severe_compensation` et `Rules.contest_deposit` sont donc sérialisés en chaîne.
 Tous les montants sont des **yoctoNEAR** (`U128` en JSON, chaîne de caractères).
 Tous les refus sont un `panic!` dont le message est un code de `errors.rs`.
 
@@ -22,7 +24,7 @@ Tous les refus sont un `panic!` dont le message est un code de `errors.rs`.
 | `approve_platform` | `{ "category": "coursier", "account": "missions.testnet" }` | agrée une plateforme |
 | `issue` | `{ "account": "lea.testnet", "category": "coursier", "identity": "fp-hex" }` **payable** | délivre un permis probatoire ; la caution jointe doit valoir la caution exigée (`base_bond × coefficient`) |
 | `resolve_contest` | `{ "category": "coursier", "mission_id": "m-1", "upheld": true }` | confirme (upheld=true) ou annule le signalement |
-| `strike_platform` | `{ "account": "missions.testnet" }` | appelé en interne quand un recours est gagné ; 3 avertissements → `active = false` |
+| `strike_platform` | `{ "account": "missions.testnet" }` | avertissement manuel (appelant : émetteur) ; aussi appliqué quand un recours est gagné ; 3 avertissements → `active = false` |
 | `revoke_license` | `{ "account": "lea.testnet", "category": "coursier", "reason": "fraude" }` | révoque (fraude) |
 
 ### Plateforme agréée
@@ -54,14 +56,16 @@ Appelant non agréé → `ERR_NOT_PLATFORM`. Plateforme suspendue → `ERR_PLATF
 | `status` | `{ "account": "lea.testnet", "category": "coursier" }` | `StatusView` (voir `model.rs`) |
 | `is_allowed` | `{ "account": "lea.testnet", "category": "coursier", "min_points": 9 }` (`min_points` optionnel) | `bool`, calculé à l'instant de l'appel |
 | `check` | `{ "account": "…", "category": "…", "requirements": { "min_points": 9, "min_missions": 5, "max_invalidations": 0, "min_age_months": 12, "max_coefficient": 150 } }` | `{ "allowed": bool, "code": Option<String> }` |
-| `license` | `{ "token_id": "permis-1" }` | `LicenseView` |
+| `license` | `{ "token_id": "permis-1" }` | l'enregistrement brut `License` |
+| `license_of` | `{ "account": "…", "category": "…" }` | l'enregistrement brut du permis vivant |
 | `platform` | `{ "account": "missions.testnet" }` | `{ "active": bool, "warnings": u8, "approved_at": u64 }` |
 | `delegation` | `{ "delegate": "agent1.lea.testnet", "category": "coursier" }` | `{ holder, delegate, category, expires_at } \| null` |
 | `fund` | `{}` | `U128` |
 | `credit` | `{ "account": "lea.testnet" }` | `U128` |
 | `rules` | `{ "category": "coursier", "version": 1 }` | `Rules` |
 | `categories` | `{}` | `[{ id, issuer, base_bond, versions }]` |
-| `clock` | `{}` | `u64` (nanosecondes) — sert aux démos pour attendre une échéance |
+| `clock` | `{}` | `U64` (nanosecondes, chaîne JSON) — sert aux démos pour attendre une échéance |
+| `issuer` | `{}` | `AccountId` de l'émetteur |
 
 ### NEP-171 / NEP-181 / NEP-393 (lecture seule)
 
@@ -92,6 +96,9 @@ Appelant non agréé → `ERR_NOT_PLATFORM`. Plateforme suspendue → `ERR_PLATF
 | `close` | `{ "mission_id": 1, "outcome": "clean\|light\|medium\|severe" }` | paie le prestataire, puis appelle `permis.record_mission(...)` |
 | `mission` | `{ "mission_id": 1 }` | `{ id, poster, worker, reward, state, outcome }` |
 | `missions` | `{}` | liste |
+
+Note : `is_allowed` renvoie un `bool` sans code de refus. Pour afficher le code précis
+(`ERR_LICENSE_SUSPENDED`, `ERR_UNDER_BONDED`, …), `missions` lit la vue `check` du registre.
 
 `accept` doit utiliser un appel croisé avec **gas statique** et un callback `on_allowed`
 (`Promise::then`), jamais un `env::promise_result` synchrone.

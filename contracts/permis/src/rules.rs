@@ -36,7 +36,7 @@ pub fn clean_since(l: &License) -> u64 {
 /// Probation starts at 6 points and gains 2 per clean year, up to the maximum.
 pub fn cap_at(r: &Rules, clean_seconds: u64) -> Points {
     let year = r.months(12);
-    let years = if year == 0 { 0 } else { clean_seconds / year };
+    let years = clean_seconds.checked_div(year).unwrap_or(0);
     let gain = years.saturating_mul(r.probation_gain as u64);
     ((r.probation_points as u64 + gain).min(r.max_points as u64)) as Points
 }

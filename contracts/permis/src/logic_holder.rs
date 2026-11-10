@@ -44,7 +44,7 @@ pub fn delegate(permis: &mut Permis, category: String, delegate: AccountId, expi
             expires_at,
         },
     );
-    events::delegation_changed(&holder.to_string(), &category, &delegate.to_string(), true);
+    events::delegation_changed(holder.as_ref(), &category, delegate.as_ref(), true);
 }
 
 pub fn revoke_delegate(permis: &mut Permis, category: String, delegate: AccountId) {
@@ -53,7 +53,7 @@ pub fn revoke_delegate(permis: &mut Permis, category: String, delegate: AccountI
     permis
         .delegations
         .remove(&format!("{}|{}", delegate, category));
-    events::delegation_changed(&holder.to_string(), &category, &delegate.to_string(), false);
+    events::delegation_changed(holder.as_ref(), &category, delegate.as_ref(), false);
 }
 
 /// Open a contest on a recorded report, inside the window, with a deposit.
@@ -99,7 +99,7 @@ pub fn contest(permis: &mut Permis, category: String, mission_id: String) {
         },
     );
     permis.save(license);
-    events::contest_opened(&holder.to_string(), &category, &mission_id, deposit);
+    events::contest_opened(holder.as_ref(), &category, &mission_id, deposit);
 }
 
 /// +4 points after a clean streak, once a year.
@@ -120,7 +120,7 @@ pub fn claim_stage(permis: &mut Permis, category: String) {
     license.streak_ok = 0;
     let after = license.points;
     permis.save(license);
-    events::points_changed(&holder.to_string(), &category, e.points, after, "stage");
+    events::points_changed(holder.as_ref(), &category, e.points, after, "stage");
 }
 
 /// Hand the licence back: the bond goes to the credit, after no claim.

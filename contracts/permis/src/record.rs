@@ -69,14 +69,9 @@ pub fn record_mission(
         }
         rules::bump_coefficient(&mut dossier.coefficient);
         permis.add_credit(&client, compensation);
-        events::bond_slashed(&holder.to_string(), &category, slashed, fund_share);
+        events::bond_slashed(holder.as_ref(), &category, slashed, fund_share);
         if compensation > 0 {
-            events::client_compensated(
-                &holder.to_string(),
-                &client.to_string(),
-                compensation,
-                &mission_id,
-            );
+            events::client_compensated(holder.as_ref(), client.as_ref(), compensation, &mission_id);
         }
         if effect.invalidated {
             dossier.invalidations = dossier.invalidations.saturating_add(1);
@@ -109,21 +104,21 @@ pub fn record_mission(
     permis.save(license);
 
     events::mission_recorded(
-        &holder.to_string(),
+        holder.as_ref(),
         &category,
         &mission_id,
         class.as_str(),
-        &client.to_string(),
+        client.as_ref(),
     );
     events::points_changed(
-        &holder.to_string(),
+        holder.as_ref(),
         &category,
         effect.before,
         effect.after,
         class.as_str(),
     );
     if effect.invalidated {
-        events::license_suspended(&holder.to_string(), &category, effect.suspended_until);
+        events::license_suspended(holder.as_ref(), &category, effect.suspended_until);
     }
     view
 }
