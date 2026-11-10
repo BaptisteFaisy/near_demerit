@@ -19,7 +19,9 @@ pub struct RecordView {
     pub points: u8,
     pub suspended_until: u64,
     pub invalidated: bool,
+    #[serde(with = "crate::model::yocto")]
     pub compensation: u128,
+    #[serde(with = "crate::model::yocto")]
     pub fund_share: u128,
     pub coefficient: BasisPoints,
     pub under_bonded: bool,

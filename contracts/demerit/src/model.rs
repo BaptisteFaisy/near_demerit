@@ -150,6 +150,7 @@ impl Rules {
 pub struct Category {
     pub id: String,
     pub issuer: AccountId,
+    #[serde(with = "yocto")]
     pub base_bond: u128,
     pub versions: Vec<Rules>,
 }
@@ -178,6 +179,7 @@ pub struct Report {
     /// Points taken by this report, so a won contest can give them back.
     pub points_lost: u8,
     /// Money taken off the bond for this report (compensation + fund share).
+    #[serde(with = "yocto")]
     pub slashed: u128,
 }
 
@@ -201,6 +203,7 @@ pub struct License {
     pub missions_flagged: u64,
     pub streak_ok: u32,
     pub last_stage_at: u64,
+    #[serde(with = "yocto")]
     pub bond: u128,
     pub rules_version: u32,
     pub revoked: bool,
@@ -240,6 +243,7 @@ pub struct Contest {
     pub mission_id: String,
     pub claimant: AccountId,
     pub platform: AccountId,
+    #[serde(with = "yocto")]
     pub deposit: u128,
     pub opened_at: u64,
     pub open: bool,

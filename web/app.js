@@ -14,6 +14,30 @@
     return out;
   }
 
+  /* ---------------------------------------------------------- amount parsing */
+  // YoctoNEAR amounts travel as decimal strings. A value that went through
+  // JSON.parse as a number may already be in exponential form: expand it
+  // instead of throwing on BigInt("1.25e+24").
+  function toBigInt(value) {
+    if (typeof value === 'bigint') return value;
+    if (value === null || value === undefined || value === '') return 0n;
+    var raw = String(value).trim();
+    if (/^-?\d+(\.\d+)?e[+-]?\d+$/i.test(raw)) {
+      var parts = raw.toLowerCase().split('e');
+      var mantissa = parts[0];
+      var fracDigits = (mantissa.split('.')[1] || '').length;
+      var digits = mantissa.replace('.', '');
+      // 1.25e+24 is 125 followed by 22 zeros, not 24.
+      var exp = parseInt(parts[1], 10) - fracDigits;
+      var sign = digits.charAt(0) === '-' ? '-' : '';
+      if (sign) digits = digits.slice(1);
+      if (exp >= 0) digits += new Array(exp + 1).join('0');
+      else digits = digits.slice(0, digits.length + exp);
+      raw = sign + digits;
+    }
+    try { return BigInt(raw); } catch (e) { return 0n; }
+  }
+
   /* ------------------------------------------------ JSON-RPC Helper (Unique) */
   function b64encode(str) {
     var bytes = new TextEncoder().encode(str), bin = '';
@@ -48,7 +72,7 @@
   function setText(id, val) { var el = $(id); if (el) el.textContent = (val === null || val === undefined || val === '') ? '—' : String(val); }
   function fmtNear(yocto) {
     try {
-      var v = BigInt(String(yocto || '0')), whole = v / 1000000000000000000000000n;
+      var v = toBigInt(yocto), whole = v / 1000000000000000000000000n;
       var frac = (v % 1000000000000000000000000n).toString().padStart(24, '0').slice(0, 4);
       return whole.toLocaleString('fr-FR') + (frac === '0000' ? '' : ',' + frac) + ' Ⓝ';
     } catch (e) { return String(yocto); }
@@ -164,7 +188,7 @@
   /* ------------------------------------------------------- Section 4: Holder */
   function updateHolderFinances(st) {
     setText('myBond', fmtNear(st.bond)); setText('myBondRequired', fmtNear(st.required_bond));
-    var b = BigInt(String(st.bond || '0')), req = BigInt(String(st.required_bond || '0'));
+    var b = toBigInt(st.bond), req = toBigInt(st.required_bond);
     setText('myBondExcess', fmtNear(b > req ? (b - req).toString() : '0'));
     if (cfg.contract && st.holder) {
       viewCall(cfg.contract, 'credit', { account: st.holder }).then(function (c) { setText('myCredit', fmtNear(c)); }).catch(function () {});

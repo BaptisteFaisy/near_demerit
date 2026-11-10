@@ -59,14 +59,17 @@ web-ui-smoke:
 
 ## Local sandbox node kept alive plus the page served on http://127.0.0.1:8080.
 ## Writes out/devnet.json with the contract, missions and RPC addresses.
+## Override the web port with `make dev WEB_PORT=8090`.
+WEB_PORT ?= 8080
 dev: build
 	$(CARGO) build -p demo --bin devnet
-	@rm -f out/devnet.json
-	@./target/debug/devnet & echo $$! > out/devnet.pid; \
-	trap 'kill $$(cat out/devnet.pid) 2>/dev/null; rm -f out/devnet.pid' EXIT INT TERM; \
-	until [ -s out/devnet.json ]; do sleep 1; done; \
-	echo "Devnet ready: $$(cat out/devnet.json)"; \
-	cd web && python3 -m http.server 8080
+	@mkdir -p $(CURDIR)/out && rm -f $(CURDIR)/out/devnet.json $(CURDIR)/out/devnet.pid
+	@./target/debug/devnet & echo $$! > $(CURDIR)/out/devnet.pid; \
+	trap 'kill $$(cat $(CURDIR)/out/devnet.pid) 2>/dev/null; rm -f $(CURDIR)/out/devnet.pid' EXIT INT TERM; \
+	until [ -s $(CURDIR)/out/devnet.json ]; do sleep 1; done; \
+	echo "Devnet ready: $$(cat $(CURDIR)/out/devnet.json)"; \
+	echo "Page: http://127.0.0.1:$(WEB_PORT)/?contract=$$(python3 -c "import json;print(json.load(open('$(CURDIR)/out/devnet.json'))['contract'])")"; \
+	cd web && python3 -m http.server $(WEB_PORT)
 
 lint:
 	RUSTFLAGS="$(NEAR_RUSTFLAGS)" $(CARGO) clippy --workspace --all-targets -- -D warnings

@@ -225,7 +225,11 @@
   function el(tag, attrs, text) {
     var node = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) { node.setAttribute(k, attrs[k]); });
-    if (text !== undefined) node.textContent = text;
+    if (text !== undefined && text !== null) {
+      // A child node is appended, a string becomes text: never "[object HTMLElement]".
+      if (typeof text === 'object' && text.nodeType) node.appendChild(text);
+      else node.textContent = text;
+    }
     return node;
   }
 
