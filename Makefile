@@ -10,7 +10,7 @@ ifneq (,$(wildcard $(SANDBOX_LOCAL)))
 export NEAR_SANDBOX_BIN_PATH ?= $(SANDBOX_LOCAL)
 endif
 
-.PHONY: setup build test demo attack sim web web-smoke lint fmt clean
+.PHONY: setup build test demo attack sim testnet testnet-dry web web-smoke lint fmt clean dev web-ui-smoke
 
 ## Toolchain, contracts, and a first build. No network beyond crates.io.
 setup:
@@ -37,12 +37,36 @@ attack: build
 sim:
 	$(CARGO) run -p demo --bin sim --quiet
 
+## Testnet: create the accounts, deploy both contracts, seed a readable
+## scenario, write out/testnet.json and point web/config.js at it.
+testnet: build
+	bash scripts/testnet.sh
+
+testnet-dry:
+	bash scripts/testnet.sh --dry-run
+
 ## Static public page: open web/index.html, or `make web` for a local server.
 web:
 	cd web && python3 -m http.server 8080
 
 web-smoke:
 	cd web && node scripts/smoke.mjs
+
+## Headless UI check against the live sandbox node: needs `make dev` running.
+web-ui-smoke:
+	cd web && npm install --no-audit --no-fund >/dev/null 2>&1
+	cd web && node scripts/ui-smoke.mjs
+
+## Local sandbox node kept alive plus the page served on http://127.0.0.1:8080.
+## Writes out/devnet.json with the contract, missions and RPC addresses.
+dev: build
+	$(CARGO) build -p demo --bin devnet
+	@rm -f out/devnet.json
+	@./target/debug/devnet & echo $$! > out/devnet.pid; \
+	trap 'kill $$(cat out/devnet.pid) 2>/dev/null; rm -f out/devnet.pid' EXIT INT TERM; \
+	until [ -s out/devnet.json ]; do sleep 1; done; \
+	echo "Devnet ready: $$(cat out/devnet.json)"; \
+	cd web && python3 -m http.server 8080
 
 lint:
 	RUSTFLAGS="$(NEAR_RUSTFLAGS)" $(CARGO) clippy --workspace --all-targets -- -D warnings
