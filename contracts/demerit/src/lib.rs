@@ -1,4 +1,4 @@
-//! Permis à points — a non-transferable professional licence.
+//! Demerit à points — a non-transferable professional licence.
 //!
 //! Points fall when a real client reports a mission, and come back with time.
 //! At zero, every platform that asks is refused, and the bond indemnifies the
@@ -48,7 +48,7 @@ pub enum Key {
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
-pub struct Permis {
+pub struct Demerit {
     pub issuer: AccountId,
     pub categories: LookupMap<String, Category>,
     pub order: Vec<String>,
@@ -75,7 +75,7 @@ pub struct Permis {
 }
 
 #[near]
-impl Permis {
+impl Demerit {
     /// The deployer is the issuer: it verifies identities off chain.
     #[init]
     pub fn new() -> Self {

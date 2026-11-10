@@ -224,7 +224,7 @@ mod tests {
 
     fn licence(r: &Rules) -> License {
         License {
-            token_id: "permis-1".into(),
+            token_id: "demerit-1".into(),
             holder: "lea.testnet".parse::<AccountId>().unwrap(),
             category: "coursier".into(),
             identity: "fp-lea".into(),

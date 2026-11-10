@@ -1,4 +1,4 @@
-# ABI — contrats `permis` et `missions`
+# ABI — contrats `demerit` et `missions`
 
 > Contrat de référence entre les lots. Toute signature ci-dessous est figée :
 > les démos, la page web et les tests s'écrivent contre ce document.
@@ -9,7 +9,7 @@ les deux champs `Rules.severe_compensation` et `Rules.contest_deposit` sont donc
 Tous les montants sont des **yoctoNEAR** (`U128` en JSON, chaîne de caractères).
 Tous les refus sont un `panic!` dont le message est un code de `errors.rs`.
 
-## 1. `permis` — le registre
+## 1. `demerit` — le registre
 
 ```rust
 #[init] fn new() -> Self                       // issuer = predecessor_account_id()
@@ -56,7 +56,7 @@ Appelant non agréé → `ERR_NOT_PLATFORM`. Plateforme suspendue → `ERR_PLATF
 | `status` | `{ "account": "lea.testnet", "category": "coursier" }` | `StatusView` (voir `model.rs`) |
 | `is_allowed` | `{ "account": "lea.testnet", "category": "coursier", "min_points": 9 }` (`min_points` optionnel) | `bool`, calculé à l'instant de l'appel |
 | `check` | `{ "account": "…", "category": "…", "requirements": { "min_points": 9, "min_missions": 5, "max_invalidations": 0, "min_age_months": 12, "max_coefficient": 150 } }` | `{ "allowed": bool, "code": Option<String> }` |
-| `license` | `{ "token_id": "permis-1" }` | l'enregistrement brut `License` |
+| `license` | `{ "token_id": "demerit-1" }` | l'enregistrement brut `License` |
 | `license_of` | `{ "account": "…", "category": "…" }` | l'enregistrement brut du permis vivant |
 | `platform` | `{ "account": "missions.testnet" }` | `{ "active": bool, "warnings": u8, "approved_at": u64 }` |
 | `delegation` | `{ "delegate": "agent1.lea.testnet", "category": "coursier" }` | `{ holder, delegate, category, expires_at } \| null` |
@@ -86,14 +86,14 @@ Appelant non agréé → `ERR_NOT_PLATFORM`. Plateforme suspendue → `ERR_PLATF
 ## 2. `missions` — la plateforme de démonstration
 
 ```rust
-#[init] fn new(permis: AccountId, category: String, min_points: Option<u8>) -> Self
+#[init] fn new(registry: AccountId, category: String, min_points: Option<u8>) -> Self
 ```
 
 | Méthode | Args JSON | Effet |
 |---|---|---|
 | `post` | `{ "reward": "1000000000000000000000000" }` **payable** (≥ reward) | publie une mission, renvoie `u64` |
-| `accept` | `{ "mission_id": 1 }` | interroge `permis.is_allowed(worker, category, min_points)` ; si oui, attribue dans le callback, sinon `panic!` avec le code renvoyé (`ERR_LICENSE_SUSPENDED`, `ERR_UNDER_BONDED`, `ERR_DELEGATION_EXPIRED`, `ERR_LICENSE_REVOKED`) |
-| `close` | `{ "mission_id": 1, "outcome": "clean\|light\|medium\|severe" }` | paie le prestataire, puis appelle `permis.record_mission(...)` |
+| `accept` | `{ "mission_id": 1 }` | interroge `demerit.is_allowed(worker, category, min_points)` ; si oui, attribue dans le callback, sinon `panic!` avec le code renvoyé (`ERR_LICENSE_SUSPENDED`, `ERR_UNDER_BONDED`, `ERR_DELEGATION_EXPIRED`, `ERR_LICENSE_REVOKED`) |
+| `close` | `{ "mission_id": 1, "outcome": "clean\|light\|medium\|severe" }` | paie le prestataire, puis appelle `demerit.record_mission(...)` |
 | `mission` | `{ "mission_id": 1 }` | `{ id, poster, worker, reward, state, outcome }` |
 | `missions` | `{}` | liste |
 
@@ -103,7 +103,7 @@ Note : `is_allowed` renvoie un `bool` sans code de refus. Pour afficher le code 
 `accept` doit utiliser un appel croisé avec **gas statique** et un callback `on_allowed`
 (`Promise::then`), jamais un `env::promise_result` synchrone.
 
-## 3. Codes de refus (voir `contracts/permis/src/errors.rs`)
+## 3. Codes de refus (voir `contracts/demerit/src/errors.rs`)
 
 `ERR_SOULBOUND`, `ERR_NOT_ISSUER`, `ERR_NOT_PLATFORM`, `ERR_PLATFORM_SUSPENDED`,
 `ERR_MISSION_ALREADY_RECORDED`, `ERR_NO_LICENSE`, `ERR_LICENSE_SUSPENDED`,

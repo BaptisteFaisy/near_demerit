@@ -8,7 +8,7 @@ use near_sdk::{testing_env, NearToken, VMContext};
 
 use crate::model::*;
 use crate::views::Requirements;
-use crate::Permis;
+use crate::Demerit;
 
 const NEAR: u128 = 1_000_000_000_000_000_000_000_000;
 const MONTH: u64 = 10_000_000_000; // 10 s in the demo scale
@@ -16,7 +16,7 @@ const ISSUER: &str = "issuer.testnet";
 
 fn ctx(predecessor: &str, deposit: u128, at: u64) -> VMContext {
     VMContextBuilder::new()
-        .current_account_id(account("permis.testnet"))
+        .current_account_id(account("demerit.testnet"))
         .predecessor_account_id(account(predecessor))
         .signer_account_id(account(predecessor))
         .attached_deposit(NearToken::from_yoctonear(deposit))
@@ -37,9 +37,9 @@ fn account(name: &str) -> AccountId {
 }
 
 /// One category, one approved platform, one licence for Léa at t=0.
-fn setup() -> Permis {
+fn setup() -> Demerit {
     at(ISSUER, 0);
-    let mut p = Permis::new();
+    let mut p = Demerit::new();
     p.create_category("coursier".into(), Rules::default_scale(MONTH), U128(NEAR));
     p.approve_platform("coursier".into(), account("missions.testnet"));
     with_deposit(ISSUER, 0, NEAR);
@@ -47,7 +47,7 @@ fn setup() -> Permis {
     p
 }
 
-fn record(p: &mut Permis, ts: u64, mission: &str, outcome: &str) {
+fn record(p: &mut Demerit, ts: u64, mission: &str, outcome: &str) {
     at("missions.testnet", ts);
     p.record_mission(
         account("lea.testnet"),
@@ -202,7 +202,7 @@ fn a_licence_never_moves() {
     let mut p = setup();
     at("lea.testnet", 0);
     let moved = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        p.nft_transfer(account("bob.testnet"), "permis-1".into(), None, None)
+        p.nft_transfer(account("bob.testnet"), "demerit-1".into(), None, None)
     }));
     assert!(panic_message(moved.unwrap_err()).contains("ERR_SOULBOUND"));
 }
@@ -212,7 +212,7 @@ fn the_token_title_shows_todays_points_without_a_transaction() {
     let mut p = setup();
     record(&mut p, 0, "m-1", "medium");
     at(ISSUER, 0);
-    let token = p.nft_token("permis-1".into()).expect("token");
+    let token = p.nft_token("demerit-1".into()).expect("token");
     assert_eq!(token.computed_title, "Coursier · 3/6 · probatoire");
     assert!(token.metadata.extra.unwrap().contains("\"points\":3"));
 }

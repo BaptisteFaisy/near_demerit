@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 use demo::*;
-use permis::model::Status;
+use demerit::model::Status;
 use serde_json::json;
 
 #[tokio::main]
@@ -47,7 +47,7 @@ async fn step1_issue(fx: &Fixture, table: &mut Table, ledger: &mut Ledger) -> Re
     let status = status_of(fx, fx.lea.id()).await?;
     table.verdict(
         "1 issue(lea, 1 NEAR)",
-        "6 pts, probation, permis-1, caution 1 NEAR",
+        "6 pts, probation, demerit-1, caution 1 NEAR",
         vec![
             (status.points == 6, format!("{} pts", status.points)),
             (
@@ -228,7 +228,7 @@ async fn step8_reinstated(
     let missing = before.required_bond.saturating_sub(before.bond);
     ledger.deposit(missing);
     let top_up = json!({ "category": CATEGORY });
-    call_unit(&fx.lea, fx.permis.id(), "top_up_bond", top_up, missing).await?;
+    call_unit(&fx.lea, fx.registry.id(), "top_up_bond", top_up, missing).await?;
     let accepted = attempt_accept(fx, &fx.lea, mission).await?;
     let after = status_of(fx, fx.lea.id()).await?;
     // Close it, so nothing stays escrowed in the platform when funds are checked.
@@ -284,7 +284,7 @@ async fn step9_soulbound(fx: &Fixture, table: &mut Table) -> Result<()> {
         "approval_id": null,
         "memo": null,
     });
-    let outcome = call(&fx.lea, fx.permis.id(), "nft_transfer", args, 1).await?;
+    let outcome = call(&fx.lea, fx.registry.id(), "nft_transfer", args, 1).await?;
     let dump = format!("{:#?}", outcome.failures());
     let failed = outcome.is_failure();
     let has_soulbound = dump.contains("ERR_SOULBOUND");
@@ -311,7 +311,7 @@ struct Books {
 async fn check_funds(fx: &Fixture, ledger: &mut Ledger) -> Result<Books> {
     let credit = credit_of(fx, fx.client.id()).await?;
     if credit > 0 {
-        let withdrawn = call_ok(&fx.client, fx.permis.id(), "withdraw", json!({}), 0).await?;
+        let withdrawn = call_ok(&fx.client, fx.registry.id(), "withdraw", json!({}), 0).await?;
         if withdrawn.is_success() {
             ledger.withdraw(credit);
         }

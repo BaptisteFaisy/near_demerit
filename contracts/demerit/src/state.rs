@@ -4,7 +4,7 @@ use near_sdk::{env, AccountId, NearToken, Promise};
 
 use crate::errors::*;
 use crate::model::*;
-use crate::Permis;
+use crate::Demerit;
 
 // ---------------------------------------------------------------------------
 // Small helpers. Every entry point goes through them, so a rule is written once.
@@ -22,13 +22,13 @@ pub fn mission_key(platform: &AccountId, mission_id: &str) -> String {
     format!("{}/{}", platform, mission_id)
 }
 
-pub fn assert_issuer(permis: &Permis) {
-    if env::predecessor_account_id() != permis.issuer {
+pub fn assert_issuer(registry: &Demerit) {
+    if env::predecessor_account_id() != registry.issuer {
         env::panic_str(ERR_NOT_ISSUER);
     }
 }
 
-impl Permis {
+impl Demerit {
     pub fn category(&self, id: &str) -> Category {
         self.categories
             .get(&id.to_string())

@@ -19,11 +19,11 @@ setup:
 	@$(MAKE) build
 
 build:
-	RUSTFLAGS="$(NEAR_RUSTFLAGS)" $(CARGO) build --target wasm32-unknown-unknown --release -p permis -p missions
-	@test -f $(WASM_DIR)/permis.wasm && test -f $(WASM_DIR)/missions.wasm && echo "BUILD OK"
+	RUSTFLAGS="$(NEAR_RUSTFLAGS)" $(CARGO) build --target wasm32-unknown-unknown --release -p demerit -p missions
+	@test -f $(WASM_DIR)/demerit.wasm && test -f $(WASM_DIR)/missions.wasm && echo "BUILD OK"
 
 test:
-	$(CARGO) test -p permis -p missions
+	$(CARGO) test -p demerit -p missions
 
 ## Nine steps from the spec on a local sandbox: prints a table, fails loudly.
 demo: build

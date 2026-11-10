@@ -1,10 +1,10 @@
 [package]
-name = "permis"
+name = "demerit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Permis à points: a non-transferable professional licence with points, bond and dossier"
+description = "Demerit: a non-transferable professional licence with points, a bond that pays the client, and a dossier that follows the identity"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

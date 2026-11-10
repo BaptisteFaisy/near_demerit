@@ -1,12 +1,12 @@
 //! `make sim` — one profession, five robots, twenty-four simulated months.
 //!
 //! Runs entirely in memory on the same pure functions the contract uses
-//! (`permis::rules`): no chain, no wasm, no randomness, no wall clock.
+//! (`demerit::rules`): no chain, no wasm, no randomness, no wall clock.
 //! The five expectations of the spec (section 7.16) are asserted, then the
 //! money is checked: bonds + fund + credits must equal what was put in.
 
-use permis::model::{BasisPoints, Dossier, License, OutcomeClass, Rules};
-use permis::rules::{
+use demerit::model::{BasisPoints, Dossier, License, OutcomeClass, Rules};
+use demerit::rules::{
     apply_outcome, bump_coefficient, effective, materialize, relax_coefficient, required_bond,
 };
 
@@ -33,7 +33,7 @@ impl Books {
         self.paid_in += bond;
         self.held += bond;
         License {
-            token_id: format!("permis-{holder}"),
+            token_id: format!("demerit-{holder}"),
             holder: holder.parse().expect("account id"),
             category: "coursier".into(),
             identity: identity.into(),

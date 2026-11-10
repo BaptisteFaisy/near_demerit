@@ -8,37 +8,37 @@ use crate::events;
 use crate::model::*;
 use crate::rules;
 use crate::state::{assert_issuer, now};
-use crate::Permis;
+use crate::Demerit;
 
-pub fn create_category(permis: &mut Permis, id: String, rules: Rules, base_bond: U128) {
-    assert_issuer(permis);
-    if permis.categories.get(&id).is_some() {
+pub fn create_category(registry: &mut Demerit, id: String, rules: Rules, base_bond: U128) {
+    assert_issuer(registry);
+    if registry.categories.get(&id).is_some() {
         env::panic_str(ERR_CATEGORY_EXISTS);
     }
     let category = Category {
         id: id.clone(),
-        issuer: permis.issuer.clone(),
+        issuer: registry.issuer.clone(),
         base_bond: base_bond.0,
         versions: vec![rules],
     };
-    permis.categories.insert(&id, &category);
-    permis.order.push(id);
+    registry.categories.insert(&id, &category);
+    registry.order.push(id);
 }
 
 /// A new scale is a new version; the previous one keeps judging old reports.
-pub fn publish_rules(permis: &mut Permis, category: String, rules: Rules) -> u32 {
-    assert_issuer(permis);
-    let mut def = permis.category(&category);
+pub fn publish_rules(registry: &mut Demerit, category: String, rules: Rules) -> u32 {
+    assert_issuer(registry);
+    let mut def = registry.category(&category);
     def.versions.push(rules);
     let version = def.version();
-    permis.categories.insert(&category, &def);
+    registry.categories.insert(&category, &def);
     version
 }
 
-pub fn approve_platform(permis: &mut Permis, category: String, account: AccountId) {
-    assert_issuer(permis);
-    let _ = permis.category(&category);
-    permis.platforms.insert(
+pub fn approve_platform(registry: &mut Demerit, category: String, account: AccountId) {
+    assert_issuer(registry);
+    let _ = registry.category(&category);
+    registry.platforms.insert(
         &account,
         &Platform {
             active: true,
@@ -48,22 +48,22 @@ pub fn approve_platform(permis: &mut Permis, category: String, account: AccountI
     );
 }
 
-pub fn issue(permis: &mut Permis, account: AccountId, category: String, identity: String) {
-    assert_issuer(permis);
-    let def = permis.category(&category);
-    let rules = permis.rules_of(&def, def.version());
-    let dossier = permis.dossier(&identity);
+pub fn issue(registry: &mut Demerit, account: AccountId, category: String, identity: String) {
+    assert_issuer(registry);
+    let def = registry.category(&category);
+    let rules = registry.rules_of(&def, def.version());
+    let dossier = registry.dossier(&identity);
     if dossier.revoked {
         env::panic_str(ERR_IDENTITY_REVOKED);
     }
-    assert_identity_free(permis, &identity, &category);
+    assert_identity_free(registry, &identity, &category);
     let required = rules::required_bond(def.base_bond, dossier.coefficient);
-    let deposit = permis.deposit();
+    let deposit = registry.deposit();
     if deposit < required {
         env::panic_str(ERR_BOND_TOO_SMALL);
     }
     let license = new_probationary(
-        permis,
+        registry,
         &account,
         &category,
         &identity,
@@ -72,7 +72,7 @@ pub fn issue(permis: &mut Permis, account: AccountId, category: String, identity
         dossier.invalidations,
     );
     let token_id = license.token_id.clone();
-    register_license(permis, &account, &token_id, license, required, deposit);
+    register_license(registry, &account, &token_id, license, required, deposit);
     events::license_issued(
         account.as_ref(),
         &category,
@@ -83,7 +83,7 @@ pub fn issue(permis: &mut Permis, account: AccountId, category: String, identity
 
 /// A brand-new licence starts in probation, at the category's probation cap.
 fn new_probationary(
-    permis: &Permis,
+    registry: &Demerit,
     account: &AccountId,
     category: &str,
     identity: &str,
@@ -93,7 +93,7 @@ fn new_probationary(
 ) -> License {
     let at = now();
     License {
-        token_id: format!("permis-{}", permis.next_id + 1),
+        token_id: format!("demerit-{}", registry.next_id + 1),
         holder: account.clone(),
         category: category.to_string(),
         identity: identity.to_string(),
@@ -111,7 +111,7 @@ fn new_probationary(
         streak_ok: 0,
         last_stage_at: 0,
         bond,
-        rules_version: permis.category(category).version(),
+        rules_version: registry.category(category).version(),
         revoked: false,
         renounced: false,
         reports: Vec::new(),
@@ -120,7 +120,7 @@ fn new_probationary(
 
 /// Index the licence, mark the identity live, and credit any excess deposit.
 fn register_license(
-    permis: &mut Permis,
+    registry: &mut Demerit,
     account: &AccountId,
     token_id: &str,
     license: License,
@@ -129,28 +129,28 @@ fn register_license(
 ) {
     let identity = license.identity.clone();
     let category = license.category.clone();
-    permis.next_id += 1;
-    permis.save(license);
-    let mut ids = permis.owned.get(account).unwrap_or_default();
+    registry.next_id += 1;
+    registry.save(license);
+    let mut ids = registry.owned.get(account).unwrap_or_default();
     ids.push(token_id.to_string());
-    permis.owned.insert(account, &ids);
-    permis
+    registry.owned.insert(account, &ids);
+    registry
         .by_identity
         .insert(&identity_key(&identity, &category), &token_id.to_string());
-    let mut dossier = permis.dossier(&identity);
+    let mut dossier = registry.dossier(&identity);
     dossier.live_count += 1;
-    permis.save_dossier(dossier);
-    permis.add_credit(account, deposit - required);
+    registry.save_dossier(dossier);
+    registry.add_credit(account, deposit - required);
 }
 
 pub fn identity_key(identity: &str, category: &str) -> String {
     format!("{}|{}", identity, category)
 }
 
-fn assert_identity_free(permis: &Permis, identity: &str, category: &str) {
-    let live_id = permis.by_identity.get(&identity_key(identity, category));
+fn assert_identity_free(registry: &Demerit, identity: &str, category: &str) {
+    let live_id = registry.by_identity.get(&identity_key(identity, category));
     let Some(token_id) = live_id else { return };
-    let license = permis.tokens.get(&token_id);
+    let license = registry.tokens.get(&token_id);
     if let Some(l) = license {
         if !l.revoked && !l.renounced {
             let suspended = l.suspended_until > now();
@@ -163,17 +163,17 @@ fn assert_identity_free(permis: &Permis, identity: &str, category: &str) {
     }
 }
 
-pub fn revoke_license(permis: &mut Permis, account: AccountId, category: String, reason: String) {
-    assert_issuer(permis);
-    let mut license = permis.live(&account, &category);
+pub fn revoke_license(registry: &mut Demerit, account: AccountId, category: String, reason: String) {
+    assert_issuer(registry);
+    let mut license = registry.live(&account, &category);
     license.revoked = true;
-    permis.fund += license.bond;
+    registry.fund += license.bond;
     license.bond = 0;
-    let mut dossier = permis.dossier(&license.identity);
+    let mut dossier = registry.dossier(&license.identity);
     dossier.revoked = true;
-    permis.save_dossier(dossier);
-    permis.release_identity(&license);
-    permis.save(license);
+    registry.save_dossier(dossier);
+    registry.release_identity(&license);
+    registry.save(license);
     events::emit(
         "license_revoked",
         near_sdk::serde_json::json!({
@@ -183,30 +183,30 @@ pub fn revoke_license(permis: &mut Permis, account: AccountId, category: String,
 }
 
 /// Third strike against a platform suspends its approval.
-pub fn strike_platform(permis: &mut Permis, account: &AccountId) {
-    assert_issuer(permis);
-    let mut platform = permis
+pub fn strike_platform(registry: &mut Demerit, account: &AccountId) {
+    assert_issuer(registry);
+    let mut platform = registry
         .platforms
         .get(account)
         .unwrap_or_else(|| env::panic_str(ERR_NOT_PLATFORM));
     platform.warnings = platform.warnings.saturating_add(1);
-    let limit = permis
+    let limit = registry
         .order
         .first()
-        .map(|id| permis.category(id).versions[0].platform_strike_limit)
+        .map(|id| registry.category(id).versions[0].platform_strike_limit)
         .unwrap_or(3);
     if platform.warnings >= limit {
         platform.active = false;
     }
     let suspended = !platform.active;
-    permis.platforms.insert(account, &platform);
+    registry.platforms.insert(account, &platform);
     events::platform_struck(account.as_ref(), platform.warnings, suspended);
 }
 
-pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String, upheld: bool) {
-    assert_issuer(permis);
+pub fn resolve_contest(registry: &mut Demerit, category: String, mission_id: String, upheld: bool) {
+    assert_issuer(registry);
     let ckey = format!("{}/{}", category, mission_id);
-    let mut contest = permis
+    let mut contest = registry
         .contests
         .get(&ckey)
         .unwrap_or_else(|| env::panic_str(ERR_NO_CONTEST));
@@ -217,7 +217,7 @@ pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String
     let claimant = contest.claimant.clone();
     let platform = contest.platform.clone();
     let deposit = contest.deposit;
-    let mut license = permis.live(&claimant, &category);
+    let mut license = registry.live(&claimant, &category);
     let slot = license
         .reports
         .iter()
@@ -225,7 +225,7 @@ pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String
         .unwrap_or_else(|| env::panic_str(ERR_NO_CONTEST));
     if upheld {
         license.reports[slot].state = ReportState::Upheld;
-        permis.fund += deposit;
+        registry.fund += deposit;
     } else {
         license.reports[slot].state = ReportState::Cancelled;
         let lost = license.reports[slot].points_lost as u32;
@@ -237,15 +237,15 @@ pub fn resolve_contest(permis: &mut Permis, category: String, mission_id: String
             license.reinstated_at = now();
             license.last_invalidation_at = 0;
         }
-        let refund = license.reports[slot].slashed.min(permis.fund);
+        let refund = license.reports[slot].slashed.min(registry.fund);
         license.bond += refund;
-        permis.fund -= refund;
-        permis.add_credit(&claimant, deposit);
+        registry.fund -= refund;
+        registry.add_credit(&claimant, deposit);
     }
-    permis.save(license);
-    permis.contests.insert(&ckey, &contest);
+    registry.save(license);
+    registry.contests.insert(&ckey, &contest);
     events::contest_resolved(claimant.as_ref(), &category, &mission_id, upheld);
     if !upheld {
-        strike_platform(permis, &platform);
+        strike_platform(registry, &platform);
     }
 }

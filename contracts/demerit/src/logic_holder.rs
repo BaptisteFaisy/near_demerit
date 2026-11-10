@@ -7,35 +7,35 @@ use crate::events;
 use crate::model::*;
 use crate::rules;
 use crate::state::now;
-use crate::Permis;
+use crate::Demerit;
 
-pub fn top_up_bond(permis: &mut Permis, category: String) {
+pub fn top_up_bond(registry: &mut Demerit, category: String) {
     let holder = env::predecessor_account_id();
-    let mut license = permis.live(&holder, &category);
-    let amount = permis.deposit();
+    let mut license = registry.live(&holder, &category);
+    let amount = registry.deposit();
     license.bond += amount;
-    permis.save(license);
+    registry.save(license);
 }
 
-pub fn withdraw_bond_excess(permis: &mut Permis, category: String) {
+pub fn withdraw_bond_excess(registry: &mut Demerit, category: String) {
     let holder = env::predecessor_account_id();
-    let mut license = permis.live(&holder, &category);
-    let def = permis.category(&category);
-    let dossier = permis.dossier(&license.identity);
+    let mut license = registry.live(&holder, &category);
+    let def = registry.category(&category);
+    let dossier = registry.dossier(&license.identity);
     let required = rules::required_bond(def.base_bond, dossier.coefficient);
     if license.bond <= required {
         env::panic_str(ERR_NOTHING_TO_WITHDRAW);
     }
     let excess = license.bond - required;
     license.bond = required;
-    permis.save(license);
-    permis.pay_out(&holder, excess);
+    registry.save(license);
+    registry.pay_out(&holder, excess);
 }
 
-pub fn delegate(permis: &mut Permis, category: String, delegate: AccountId, expires_at: u64) {
+pub fn delegate(registry: &mut Demerit, category: String, delegate: AccountId, expires_at: u64) {
     let holder = env::predecessor_account_id();
-    let _ = permis.live(&holder, &category);
-    permis.delegations.insert(
+    let _ = registry.live(&holder, &category);
+    registry.delegations.insert(
         &format!("{}|{}", delegate, category),
         &Delegation {
             holder: holder.clone(),
@@ -47,27 +47,27 @@ pub fn delegate(permis: &mut Permis, category: String, delegate: AccountId, expi
     events::delegation_changed(holder.as_ref(), &category, delegate.as_ref(), true);
 }
 
-pub fn revoke_delegate(permis: &mut Permis, category: String, delegate: AccountId) {
+pub fn revoke_delegate(registry: &mut Demerit, category: String, delegate: AccountId) {
     let holder = env::predecessor_account_id();
-    let _ = permis.live(&holder, &category);
-    permis
+    let _ = registry.live(&holder, &category);
+    registry
         .delegations
         .remove(&format!("{}|{}", delegate, category));
     events::delegation_changed(holder.as_ref(), &category, delegate.as_ref(), false);
 }
 
 /// Open a contest on a recorded report, inside the window, with a deposit.
-pub fn contest(permis: &mut Permis, category: String, mission_id: String) {
+pub fn contest(registry: &mut Demerit, category: String, mission_id: String) {
     let holder = env::predecessor_account_id();
-    let mut license = permis.live(&holder, &category);
-    let def = permis.category(&category);
-    let rules = permis.rules_of(&def, license.rules_version);
-    let deposit = permis.deposit();
+    let mut license = registry.live(&holder, &category);
+    let def = registry.category(&category);
+    let rules = registry.rules_of(&def, license.rules_version);
+    let deposit = registry.deposit();
     if deposit < rules.contest_deposit {
         env::panic_str(ERR_CONTEST_DEPOSIT_TOO_SMALL);
     }
     let ckey = format!("{}/{}", category, mission_id);
-    if permis.contests.get(&ckey).map(|c| c.open).unwrap_or(false) {
+    if registry.contests.get(&ckey).map(|c| c.open).unwrap_or(false) {
         env::panic_str(ERR_ALREADY_CONTESTED);
     }
     let at = now();
@@ -82,11 +82,11 @@ pub fn contest(permis: &mut Permis, category: String, mission_id: String) {
         env::panic_str(ERR_CONTEST_WINDOW_CLOSED);
     }
     report.state = ReportState::Contested;
-    let platform = permis
+    let platform = registry
         .report_platform
         .get(&ckey)
         .unwrap_or_else(|| env::panic_str(ERR_NO_CONTEST));
-    permis.contests.insert(
+    registry.contests.insert(
         &ckey,
         &Contest {
             category: category.clone(),
@@ -98,16 +98,16 @@ pub fn contest(permis: &mut Permis, category: String, mission_id: String) {
             open: true,
         },
     );
-    permis.save(license);
+    registry.save(license);
     events::contest_opened(holder.as_ref(), &category, &mission_id, deposit);
 }
 
 /// +4 points after a clean streak, once a year.
-pub fn claim_stage(permis: &mut Permis, category: String) {
+pub fn claim_stage(registry: &mut Demerit, category: String) {
     let holder = env::predecessor_account_id();
-    let mut license = permis.live(&holder, &category);
-    let def = permis.category(&category);
-    let rules = permis.rules_of(&def, license.rules_version);
+    let mut license = registry.live(&holder, &category);
+    let def = registry.category(&category);
+    let rules = registry.rules_of(&def, license.rules_version);
     let at = now();
     let year = rules.months(12);
     let too_soon = license.last_stage_at > 0 && at.saturating_sub(license.last_stage_at) < year;
@@ -119,33 +119,33 @@ pub fn claim_stage(permis: &mut Permis, category: String) {
     license.last_stage_at = at;
     license.streak_ok = 0;
     let after = license.points;
-    permis.save(license);
+    registry.save(license);
     events::points_changed(holder.as_ref(), &category, e.points, after, "stage");
 }
 
 /// Hand the licence back: the bond goes to the credit, after no claim.
-pub fn renounce(permis: &mut Permis, category: String) {
+pub fn renounce(registry: &mut Demerit, category: String) {
     let holder = env::predecessor_account_id();
-    let mut license = permis.live(&holder, &category);
+    let mut license = registry.live(&holder, &category);
     license.renounced = true;
     let bond = license.bond;
     license.bond = 0;
-    permis.add_credit(&holder, bond);
-    permis.release_identity(&license);
-    permis.save(license);
+    registry.add_credit(&holder, bond);
+    registry.release_identity(&license);
+    registry.save(license);
     events::emit(
         "license_renounced",
         near_sdk::serde_json::json!({"holder": holder.to_string(), "category": category}),
     );
 }
 
-pub fn withdraw(permis: &mut Permis) {
+pub fn withdraw(registry: &mut Demerit) {
     let account = env::predecessor_account_id();
-    let amount = permis.credits.get(&account).unwrap_or(0);
+    let amount = registry.credits.get(&account).unwrap_or(0);
     if amount == 0 {
         env::panic_str(ERR_NOTHING_TO_WITHDRAW);
     }
-    permis.credits.remove(&account);
-    permis.credit_total = permis.credit_total.saturating_sub(amount);
-    permis.pay_out(&account, amount);
+    registry.credits.remove(&account);
+    registry.credit_total = registry.credit_total.saturating_sub(amount);
+    registry.pay_out(&account, amount);
 }

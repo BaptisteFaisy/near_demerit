@@ -9,7 +9,7 @@ use crate::errors::*;
 use crate::model::*;
 use crate::rules;
 use crate::state::now;
-use crate::Permis;
+use crate::Demerit;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -69,7 +69,7 @@ struct CheckCtx<'a> {
     dossier: &'a Dossier,
 }
 
-impl Permis {
+impl Demerit {
     /// The licence of `account`, following a delegation when there is one.
     pub fn resolve(&self, account: &AccountId, category: &str) -> Result<AccountId, String> {
         if self.has_live(account, category) {

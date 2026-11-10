@@ -7,7 +7,7 @@ use near_sdk::AccountId;
 use crate::model::*;
 use crate::rules;
 use crate::state::now;
-use crate::Permis;
+use crate::Demerit;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -51,8 +51,8 @@ pub struct NftToken {
 pub fn metadata() -> NftMetadata {
     NftMetadata {
         spec: "nft-1.0.0".to_string(),
-        name: "Permis à points".to_string(),
-        symbol: "PERMIS".to_string(),
+        name: "Demerit à points".to_string(),
+        symbol: "DEMERIT".to_string(),
         icon: None,
         base_uri: None,
         reference: None,
@@ -60,7 +60,7 @@ pub fn metadata() -> NftMetadata {
     }
 }
 
-impl Permis {
+impl Demerit {
     pub fn token_of(&self, token_id: &str) -> NftToken {
         let license = self
             .tokens

@@ -1,20 +1,20 @@
 //! `missions` — the demo platform of "Permis à points".
 //!
 //! A poster publishes a mission and escrows the reward in this contract. A
-//! worker accepts it; the platform asks the `permis` registry cross-contract
+//! worker accepts it; the platform asks the `demerit` registry cross-contract
 //! (`is_allowed`) and assigns the mission **inside the callback**. When the work
 //! is done the poster closes the mission: the worker is paid, then the registry
 //! is told (`record_mission`) so points and counters move.
 //!
 //! Design notes
-//! - `accept` never decides anything itself: `permis.is_allowed` is called with
+//! - `accept` never decides anything itself: `demerit.is_allowed` is called with
 //!   a **static** gas budget (`GAS_IS_ALLOWED`) and the decision is applied by
 //!   `on_allowed` (`Promise::then`, `#[private]`, `#[callback_result]`).
 //! - `is_allowed` is a plain `bool` view, so no refusal *code* can travel back
 //!   through the callback: a refusal is reported as `ERR_LICENSE_REFUSED`. The
 //!   detailed codes of docs/ABI.md §3 (`ERR_LICENSE_SUSPENDED`,
 //!   `ERR_UNDER_BONDED`, `ERR_DELEGATION_EXPIRED`, `ERR_LICENSE_REVOKED`) come
-//!   from `permis.check`; switching to it would only require reading
+//!   from `demerit.check`; switching to it would only require reading
 //!   `{ allowed, code }` instead of a bool.
 //! - No storage deposit is charged: the demo writes a few small records per
 //!   account, paid by the platform's own balance. The escrowed rewards are
@@ -32,13 +32,13 @@ mod model;
 use model::{ConfigView, Mission, MissionState, MissionView};
 
 // ---------------------------------------------------------------------------
-// Refusal codes. `permis` codes are reused verbatim; the ones below are local
+// Refusal codes. `demerit` codes are reused verbatim; the ones below are local
 // to this contract (docs/ABI.md §3 lists the registry ones).
 // ---------------------------------------------------------------------------
 
 /// `is_allowed` answered `false` (see the module note about the lost code).
 pub const ERR_LICENSE_REFUSED: &str = "ERR_LICENSE_REFUSED";
-/// The cross-contract call to `permis` failed (no such method, gas, panic).
+/// The cross-contract call to the registry failed (no such method, gas, panic).
 pub const ERR_LICENSE_CHECK_FAILED: &str = "ERR_LICENSE_CHECK_FAILED";
 /// The mission is already closed: closing is not idempotent.
 pub const ERR_MISSION_CLOSED: &str = "ERR_MISSION_CLOSED";
@@ -50,7 +50,7 @@ pub const ERR_REWARD_TOO_SMALL: &str = "ERR_REWARD_TOO_SMALL";
 pub const ERR_REWARD_ZERO: &str = "ERR_REWARD_ZERO";
 pub const ERR_BAD_OUTCOME: &str = "ERR_BAD_OUTCOME";
 
-/// Outcomes accepted by `permis.record_mission` (docs/ABI.md §1).
+/// Outcomes accepted by `demerit.record_mission` (docs/ABI.md §1).
 const OUTCOMES: [&str; 4] = ["clean", "light", "medium", "severe"];
 
 // Static gas budgets: never inherited from the caller's remaining gas.
@@ -58,8 +58,8 @@ pub const GAS_IS_ALLOWED: Gas = Gas::from_tgas(10);
 pub const GAS_ON_ALLOWED: Gas = Gas::from_tgas(15);
 pub const GAS_RECORD_MISSION: Gas = Gas::from_tgas(30);
 
-/// The slice of the `permis` ABI this platform talks to (docs/ABI.md §1).
-#[ext_contract(ext_permis)]
+/// The slice of the registry ABI this platform talks to (docs/ABI.md §1).
+#[ext_contract(ext_demerit)]
 pub trait Permis {
     /// Pure view: `bool`, computed at call time.
     fn is_allowed(&self, account: AccountId, category: String, min_points: Option<u8>) -> bool;
@@ -79,7 +79,7 @@ pub trait Permis {
 #[derive(PanicOnDefault)]
 pub struct Contract {
     /// Registry this platform interrogates and reports to.
-    pub permis: AccountId,
+    pub registry: AccountId,
     /// Licence category required to accept a mission here.
     pub category: String,
     /// Optional extra floor on points, forwarded to `is_allowed`.
@@ -96,9 +96,9 @@ pub struct Contract {
 #[near]
 impl Contract {
     #[init]
-    pub fn new(permis: AccountId, category: String, min_points: Option<u8>) -> Self {
+    pub fn new(registry: AccountId, category: String, min_points: Option<u8>) -> Self {
         Self {
-            permis,
+            registry,
             category,
             min_points,
             operator: env::predecessor_account_id(),
@@ -174,7 +174,7 @@ impl Contract {
             .detach();
 
         // The returned promise is a single cross-contract call (no joint promise).
-        ext_permis::ext(self.permis.clone())
+        ext_demerit::ext(self.registry.clone())
             .with_static_gas(GAS_RECORD_MISSION)
             .record_mission(
                 worker,
@@ -198,7 +198,7 @@ impl Contract {
             MissionState::Taken => env::panic_str(ERR_MISSION_ALREADY_TAKEN),
             MissionState::Closed => env::panic_str(ERR_MISSION_CLOSED),
         }
-        ext_permis::ext(self.permis.clone())
+        ext_demerit::ext(self.registry.clone())
             .with_static_gas(GAS_IS_ALLOWED)
             .is_allowed(worker.clone(), self.category.clone(), self.min_points)
             .then(
@@ -254,7 +254,7 @@ impl Contract {
 
     pub fn config(&self) -> ConfigView {
         ConfigView {
-            permis: self.permis.clone(),
+            registry: self.registry.clone(),
             category: self.category.clone(),
             min_points: self.min_points,
             operator: self.operator.clone(),
@@ -284,7 +284,7 @@ impl Contract {
     }
 }
 
-/// Mission id as `permis` sees it (docs/ABI.md uses `"m-1"` style strings).
+/// Mission id as `registry` sees it (docs/ABI.md uses `"m-1"` style strings).
 fn mission_key(mission_id: u64) -> String {
     format!("m-{mission_id}")
 }

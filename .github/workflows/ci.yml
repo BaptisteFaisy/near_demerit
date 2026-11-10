@@ -29,11 +29,11 @@ jobs:
             target
           key: cargo-${{ hashFiles('Cargo.lock') }}
       - name: Unit tests (rules engine, clock simulated)
-        run: cargo test -p permis
+        run: cargo test -p demerit
       - name: Build wasm
         run: |
-          RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release -p permis -p missions
-          ls -l target/wasm32-unknown-unknown/release/permis.wasm target/wasm32-unknown-unknown/release/missions.wasm
+          RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release -p demerit -p missions
+          ls -l target/wasm32-unknown-unknown/release/demerit.wasm target/wasm32-unknown-unknown/release/missions.wasm
   page:
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -53,7 +53,7 @@ fn expect_refusal(table: &mut Table, label: &str, expected: &str, outcome: &Exec
 /// Step 1 — An account the registry never approved tries to record a mission.
 async fn attack_unapproved(fx: &Fixture, table: &mut Table) -> Result<()> {
     let args = record_args(fx.lea.id(), "m-unapproved", "clean", fx.client.id());
-    let outcome = call(&fx.lea2, fx.permis.id(), "record_mission", args, 0).await?;
+    let outcome = call(&fx.lea2, fx.registry.id(), "record_mission", args, 0).await?;
     expect_refusal(
         table,
         "un compte non agréé enregistre une mission",
@@ -68,18 +68,18 @@ async fn attack_unapproved(fx: &Fixture, table: &mut Table) -> Result<()> {
 /// platform, and a contract cannot be made to record twice through `close`.
 async fn attack_double_record(fx: &Fixture, table: &mut Table) -> Result<()> {
     let approval = json!({ "category": CATEGORY, "account": fx.client.id() });
-    call_unit(&fx.issuer, fx.permis.id(), "approve_platform", approval, 0).await?;
+    call_unit(&fx.issuer, fx.registry.id(), "approve_platform", approval, 0).await?;
     let args = record_args(fx.lea.id(), "m-twice", "clean", fx.client.id());
     // The first recording is the honest one; the second is the attack.
     call_unit(
         &fx.client,
-        fx.permis.id(),
+        fx.registry.id(),
         "record_mission",
         args.clone(),
         0,
     )
     .await?;
-    let outcome = call(&fx.client, fx.permis.id(), "record_mission", args, 0).await?;
+    let outcome = call(&fx.client, fx.registry.id(), "record_mission", args, 0).await?;
     let label = "la même mission est enregistrée deux fois";
     expect_refusal(table, label, ERR_MISSION_ALREADY_RECORDED, &outcome);
     Ok(())
@@ -102,7 +102,7 @@ async fn attack_transfer(fx: &Fixture, table: &mut Table) -> Result<()> {
         "approval_id": null,
         "memo": null,
     });
-    let outcome = call(&fx.lea, fx.permis.id(), "nft_transfer", args, 1).await?;
+    let outcome = call(&fx.lea, fx.registry.id(), "nft_transfer", args, 1).await?;
     expect_refusal(
         table,
         "le titulaire transfère son permis",
@@ -120,13 +120,13 @@ async fn attack_delegate(fx: &Fixture, table: &mut Table) -> Result<()> {
     let now = clock(fx).await?;
     let mut mandate = json!({ "category": CATEGORY, "delegate": fx.agent.id() });
     mandate["expires_at"] = json!((now + 3_600 * 1_000_000_000).to_string());
-    call_unit(&fx.lea, fx.permis.id(), "delegate", mandate.clone(), 0).await?;
+    call_unit(&fx.lea, fx.registry.id(), "delegate", mandate.clone(), 0).await?;
     let revoke = json!({ "category": CATEGORY, "delegate": fx.agent.id() });
-    call_unit(&fx.lea, fx.permis.id(), "revoke_delegate", revoke, 0).await?;
+    call_unit(&fx.lea, fx.registry.id(), "revoke_delegate", revoke, 0).await?;
     // Second trace, already expired. If the registry refuses to write a mandate
     // in the past, the first trace (closed mandate) still carries the refusal.
     mandate["expires_at"] = json!((now - 3_600 * 1_000_000_000).to_string());
-    let _ = call(&fx.lea, fx.permis.id(), "delegate", mandate, 0).await?;
+    let _ = call(&fx.lea, fx.registry.id(), "delegate", mandate, 0).await?;
 
     let attempt = attempt_accept(fx, &fx.agent, mission).await?;
     let label = "un délégué révoqué accepte une mission";
@@ -145,12 +145,12 @@ async fn attack_delegate(fx: &Fixture, table: &mut Table) -> Result<()> {
 async fn attack_suspended_platform(fx: &Fixture, table: &mut Table) -> Result<()> {
     // The platform under scrutiny is approved first, then warned three times.
     let approval = json!({ "category": CATEGORY, "account": fx.client.id() });
-    call_unit(&fx.issuer, fx.permis.id(), "approve_platform", approval, 0).await?;
+    call_unit(&fx.issuer, fx.registry.id(), "approve_platform", approval, 0).await?;
     let target = json!({ "account": fx.client.id() });
     for _ in 0..3 {
         call_unit(
             &fx.issuer,
-            fx.permis.id(),
+            fx.registry.id(),
             "strike_platform",
             target.clone(),
             0,
@@ -158,13 +158,13 @@ async fn attack_suspended_platform(fx: &Fixture, table: &mut Table) -> Result<()
         .await?;
     }
     let args = json!({ "account": fx.client.id() });
-    let platform: Value = view(&fx.worker, fx.permis.id(), "platform", args).await?;
+    let platform: Value = view(&fx.worker, fx.registry.id(), "platform", args).await?;
     let active = platform
         .get("active")
         .and_then(Value::as_bool)
         .unwrap_or(true);
     let args = record_args(fx.lea.id(), "m-suspended", "clean", fx.client.id());
-    let outcome = call(&fx.client, fx.permis.id(), "record_mission", args, 0).await?;
+    let outcome = call(&fx.client, fx.registry.id(), "record_mission", args, 0).await?;
     let code = code_of(&outcome).unwrap_or_else(|| "aucun".to_string());
     let label = "une plateforme suspendue enregistre une mission";
     table.verdict(
@@ -188,7 +188,7 @@ async fn attack_withdraw(fx: &Fixture, table: &mut Table) -> Result<()> {
     run_mission(fx, &fx.lea, "severe", REWARD).await?;
     let status = status_settled(fx, fx.lea.id(), |s| s.points == 0).await?;
     let args = json!({ "category": CATEGORY });
-    let outcome = call(&fx.lea, fx.permis.id(), "withdraw_bond_excess", args, 0).await?;
+    let outcome = call(&fx.lea, fx.registry.id(), "withdraw_bond_excess", args, 0).await?;
     let code = code_of(&outcome).unwrap_or_else(|| "aucun".to_string());
     // A bond already below the requirement has no excess: the registry answers
     // ERR_UNDER_BONDED, or ERR_NOTHING_TO_WITHDRAW if it reads the zero excess

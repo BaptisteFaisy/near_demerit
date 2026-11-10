@@ -58,7 +58,7 @@ function get(port, pathname) {
 }
 
 async function checkSyntax(code) {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'permis-web-'));
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'demerit-web-'));
   const tmp = path.join(dir, 'app.js');
   await writeFile(tmp, code);
   return new Promise((resolve) => {

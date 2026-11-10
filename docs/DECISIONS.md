@@ -5,7 +5,7 @@ Ce document consigne les choix structurants pris pour l'implémentation du permi
 ---
 
 ### D1 — Barème en fonctions pures testables hors chaîne
-- **Décision** : Le barème de calcul des points, des plafonds, des régénérations et des coefficients est isolé dans un module Rust autonome (`contracts/permis/src/rules.rs`), exempt de tout appel à l'environnement de la machine virtuelle NEAR (`near_sdk::env`).
+- **Décision** : Le barème de calcul des points, des plafonds, des régénérations et des coefficients est isolé dans un module Rust autonome (`contracts/demerit/src/rules.rs`), exempt de tout appel à l'environnement de la machine virtuelle NEAR (`near_sdk::env`).
 - **Justification** : Permet de tester exhaustivement la logique métier via `cargo test` standard en quelques millisecondes, sans déployer de sandbox ni instancier de runtime blockchain.
 - **Conséquence** : Ce module pur est directement réutilisé par le binaire de simulation (`demo/bin/sim.rs`) et le scénario sandbox pour garantir une parité comportementale absolue.
 
@@ -47,7 +47,7 @@ Ce document consigne les choix structurants pris pour l'implémentation du permi
 ---
 
 ### D7 — Monoréférentiel unique pour les deux contrats
-- **Décision** : Les contrats `permis` (registre d'autorité) et `missions` (plateforme cliente de test), ainsi que le harnais de test sandbox, résident dans un unique espace de travail Cargo (`Cargo.lock` et workspace unifiés).
+- **Décision** : Les contrats `demerit` (registre d'autorité) et `missions` (plateforme cliente de test), ainsi que le harnais de test sandbox, résident dans un unique espace de travail Cargo (`Cargo.lock` et workspace unifiés).
 - **Justification** : Garantit la cohérence stricte des structures de données Borsh/Serde, des codes d'erreur et des définitions d'interfaces ABI entre l'émetteur et le consommateur.
 - **Conséquence** : La compilation (`make build`), la vérification de conformité CI et les tests d'intégration sandbox s'exécutent d'un seul bloc sans déphasage de version.
 

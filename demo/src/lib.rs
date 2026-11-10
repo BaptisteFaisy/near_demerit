@@ -16,14 +16,14 @@ use near_workspaces::network::Sandbox;
 use near_workspaces::result::ExecutionFinalResult;
 use near_workspaces::types::NearToken;
 use near_workspaces::{Account, AccountId, Contract, Worker};
-use permis::model::{Rules, Status, StatusView};
+use demerit::model::{Rules, Status, StatusView};
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
 
-pub use permis::errors::{ERR_DELEGATION_EXPIRED, ERR_IDENTITY_ALREADY_LICENSED};
-pub use permis::errors::{ERR_IDENTITY_SUSPENDED, ERR_LICENSE_REVOKED, ERR_LICENSE_SUSPENDED};
-pub use permis::errors::{ERR_MISSION_ALREADY_RECORDED, ERR_NOTHING_TO_WITHDRAW, ERR_NOT_PLATFORM};
-pub use permis::errors::{ERR_PLATFORM_SUSPENDED, ERR_SOULBOUND, ERR_UNDER_BONDED};
+pub use demerit::errors::{ERR_DELEGATION_EXPIRED, ERR_IDENTITY_ALREADY_LICENSED};
+pub use demerit::errors::{ERR_IDENTITY_SUSPENDED, ERR_LICENSE_REVOKED, ERR_LICENSE_SUSPENDED};
+pub use demerit::errors::{ERR_MISSION_ALREADY_RECORDED, ERR_NOTHING_TO_WITHDRAW, ERR_NOT_PLATFORM};
+pub use demerit::errors::{ERR_PLATFORM_SUSPENDED, ERR_SOULBOUND, ERR_UNDER_BONDED};
 
 pub const ERR_LICENSE_REFUSED: &str = "ERR_LICENSE_REFUSED";
 pub const CATEGORY: &str = "coursier";
@@ -36,7 +36,7 @@ pub const NEAR: u128 = 1_000_000_000_000_000_000_000_000;
 pub const BASE_BOND: u128 = NEAR;
 pub const REWARD: u128 = NEAR / 10;
 pub const IDENTITY_LEA: &str = "fp-lea";
-pub const TOKEN_ID: &str = "permis-1";
+pub const TOKEN_ID: &str = "demerit-1";
 
 const MAX_STEPS: usize = 200;
 const MAX_SETTLE: usize = 6;
@@ -136,7 +136,7 @@ pub async fn deploy_contract(
 pub struct Fixture {
     pub worker: Worker<Sandbox>,
     pub issuer: Account,
-    pub permis: Contract,
+    pub registry: Contract,
     pub missions: Contract,
     pub lea: Account,
     pub lea2: Account,
@@ -160,16 +160,16 @@ pub fn record_args(
         "mission_id": mission_id,
         "outcome": outcome,
         "client": client,
-        "evidence": format!("sha256:permis-demo/{mission_id}"),
+        "evidence": format!("sha256:demerit-demo/{mission_id}"),
     })
 }
 
 pub async fn bootstrap() -> anyhow::Result<Fixture> {
     let worker = sandbox().await?;
     let root = worker.root_account().map_err(|e| anyhow!("root: {e}"))?;
-    let (issuer, permis) = (
+    let (issuer, registry) = (
         create_account(&root, "issuer", 100).await?,
-        deploy_contract(&root, "permis", "permis").await?,
+        deploy_contract(&root, "demerit", "demerit").await?,
     );
     let (missions, lea) = (
         deploy_contract(&root, "missions", "missions").await?,
@@ -181,16 +181,16 @@ pub async fn bootstrap() -> anyhow::Result<Fixture> {
     );
     let agent = create_account(&root, "agent-lea", 100).await?;
 
-    call_unit(&issuer, permis.id(), "new", json!({}), 0).await?;
-    let platform = json!({ "permis": permis.id(), "category": CATEGORY, "min_points": null });
+    call_unit(&issuer, registry.id(), "new", json!({}), 0).await?;
+    let platform = json!({ "registry": registry.id(), "category": CATEGORY, "min_points": null });
     call_unit(&issuer, missions.id(), "new", platform, 0).await?;
-    call_unit(&issuer, permis.id(), "create_category", category_args(), 0).await?;
+    call_unit(&issuer, registry.id(), "create_category", category_args(), 0).await?;
     let approval = json!({ "category": CATEGORY, "account": missions.id() });
-    call_unit(&issuer, permis.id(), "approve_platform", approval, 0).await?;
+    call_unit(&issuer, registry.id(), "approve_platform", approval, 0).await?;
     Ok(Fixture {
         worker,
         issuer,
-        permis,
+        registry,
         missions,
         lea,
         lea2,
@@ -277,7 +277,7 @@ pub async fn amount_view(
 pub async fn status_of(fx: &Fixture, account: &AccountId) -> anyhow::Result<StatusView> {
     view(
         &fx.worker,
-        fx.permis.id(),
+        fx.registry.id(),
         "status",
         json!({ "account": account, "category": CATEGORY }),
     )
@@ -308,13 +308,13 @@ pub async fn status_settled(
 }
 
 pub async fn fund_of(fx: &Fixture) -> anyhow::Result<u128> {
-    amount_view(&fx.worker, fx.permis.id(), "fund", json!({})).await
+    amount_view(&fx.worker, fx.registry.id(), "fund", json!({})).await
 }
 
 pub async fn credit_of(fx: &Fixture, account: &AccountId) -> anyhow::Result<u128> {
     amount_view(
         &fx.worker,
-        fx.permis.id(),
+        fx.registry.id(),
         "credit",
         json!({ "account": account }),
     )
@@ -323,7 +323,7 @@ pub async fn credit_of(fx: &Fixture, account: &AccountId) -> anyhow::Result<u128
 
 pub async fn clock(fx: &Fixture) -> anyhow::Result<u64> {
     // Permis returns U64, serialized as a decimal string in JSON.
-    let raw: String = view(&fx.worker, fx.permis.id(), "clock", json!({})).await?;
+    let raw: String = view(&fx.worker, fx.registry.id(), "clock", json!({})).await?;
     raw.parse::<u64>()
         .map_err(|e| anyhow!("parse clock {raw}: {e}"))
 }
@@ -343,7 +343,7 @@ pub async fn advance_until(fx: &Fixture, target_ns: u64) -> anyhow::Result<u64> 
         // A call that changes nothing still produces a block, and a block is a second.
         let _ = fx
             .issuer
-            .call(fx.permis.id(), "categories")
+            .call(fx.registry.id(), "categories")
             .transact()
             .await;
     }
@@ -367,7 +367,7 @@ pub async fn issue(
     deposit: u128,
 ) -> anyhow::Result<ExecutionFinalResult> {
     let args = json!({ "account": holder, "category": CATEGORY, "identity": identity });
-    call(&fx.issuer, fx.permis.id(), "issue", args, deposit).await
+    call(&fx.issuer, fx.registry.id(), "issue", args, deposit).await
 }
 
 pub async fn issue_ok(
@@ -442,7 +442,7 @@ pub async fn registry_code(fx: &Fixture, account: &AccountId) -> Option<String> 
     });
     for r in [req, json!({})] {
         let args = json!({ "account": account, "category": CATEGORY, "requirements": r });
-        if let Ok(v) = view::<Value>(&fx.worker, fx.permis.id(), "check", args).await {
+        if let Ok(v) = view::<Value>(&fx.worker, fx.registry.id(), "check", args).await {
             if let Some(c) = v.get("code").and_then(|c| c.as_str()) {
                 return Some(c.to_string());
             }

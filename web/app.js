@@ -1,4 +1,4 @@
-/* Permis à points — public consultation page.
+/* Demerit — public consultation page.
  * Static, no build step, no dependency. NEAR is read through plain JSON-RPC.
  * Every on-chain read goes through viewCall(); nothing else talks to the node.
  */
@@ -25,7 +25,7 @@
   }
 
   function resolveConfig() {
-    var fromFile = window.PERMIS_CONFIG || {};
+    var fromFile = window.DEMERIT_CONFIG || {};
     var out = {};
     Object.keys(DEFAULTS).forEach(function (k) {
       var v = qs(k);

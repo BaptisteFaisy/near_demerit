@@ -72,7 +72,7 @@ pub struct MissionView {
 #[near(serializers = [json])]
 #[derive(Clone, Debug)]
 pub struct ConfigView {
-    pub permis: AccountId,
+    pub registry: AccountId,
     pub category: String,
     pub min_points: Option<u8>,
     /// Account that deployed the platform (informational).

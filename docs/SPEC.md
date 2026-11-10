@@ -3,6 +3,7 @@
 > Ticket 10 `nfts` « NFTs That Do Something ». État au mardi 10 novembre 2026.
 > Échéance : **samedi 14 novembre, 23:59 UTC** (dimanche 00:59 à Paris).
 > Nom de travail : *Points Licence*. Accroche : *reputation you can lose, not sell*.
+> **Livré sous le nom `Demerit`** — dépôt `near_demerit`, contrats `demerit` (registre) et `missions` (plateforme de démonstration).
 > Autres cahiers du ticket (hors de ce dépôt) : *Toujours à vendre*, *Carte cadeau*, *Carnet d'entretien*.
 
 ## 1. En bref
@@ -250,9 +251,9 @@ La commande imprime le tableau final et vérifie ces cinq résultats, plus la co
 
 ## 10. Contrats
 
-Deux contrats : `permis`, le registre, et `missions`, une plateforme de démonstration qui l'interroge.
+Deux contrats : `demerit` (nommé `permis` dans ce cahier), le registre, et `missions`, une plateforme de démonstration qui l'interroge.
 
-**État de `permis`** : catégories (barème, version, émetteur, caution de base) ; permis par couple compte-catégorie ; casiers par empreinte ; plateformes (active, avertissements) ; missions déjà enregistrées ; délégations ; recours ; fonds de garantie ; crédits par compte.
+**État du registre (`demerit`)** : catégories (barème, version, émetteur, caution de base) ; permis par couple compte-catégorie ; casiers par empreinte ; plateformes (active, avertissements) ; missions déjà enregistrées ; délégations ; recours ; fonds de garantie ; crédits par compte.
 
 **Champs d'un permis** : `token_id`, `holder`, `category`, `identity`, `points`, `cap`, `issued_at`, `last_report_at`, `reinstated_at`, `suspended_until`, `missions_ok`, `missions_flagged`, `streak_ok`, `last_stage_at`, `bond`, `reports` (anneau de 20).
 

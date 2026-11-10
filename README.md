@@ -1,4 +1,4 @@
-# Points Licence (Permis à points)
+# Demerit
 
 Reputation you can lose, not sell.
 
@@ -29,7 +29,7 @@ All steps execute deterministically without secrets.
 | # | Command | What it does | Expected output | Approx. time |
 |---|---|---|---|---|
 | 1 | `make setup` | Installs wasm target, fetches crates, runs build | Toolchain ready, `BUILD OK` | ~1-3 min first run |
-| 2 | `make build` | Compiles `permis` and `missions` contracts to wasm32 | `BUILD OK` (`target/.../release/*.wasm`) | ~15 s |
+| 2 | `make build` | Compiles `demerit` and `missions` contracts to wasm32 | `BUILD OK` (`target/.../release/*.wasm`) | ~15 s |
 | 3 | `make test` | Runs the unit tests (rules engine + contract with simulated clock) | `18 passed; 0 failed` | ~10 s |
 | 4 | `make demo` | Runs the 9-step sandbox scenario (1 month = 2 s) | Formatted table, `DEMO OK (9/9)` | ~50 s |
 | 5 | `make attack` | Executes 7 unauthorized / abusive operations | 7 rejected transactions, `ATTACK OK (7/7)` | ~20 s |
@@ -56,9 +56,9 @@ No secret, no wallet, no testnet account is needed for any of the steps below.
 The project contains two contracts, a shared deterministic rules module, and an integration harness:
 
 ```text
-near-permis-a-points/
+near-demerit/
 ├── contracts/
-│   ├── permis/       # Core registry: NEP-171, scale, bond, identity dossiers, delegations
+│   ├── demerit/      # Core registry: NEP-171, scale, bond, identity dossiers, delegations
 │   └── missions/     # Demo platform: posts gigs, checks is_allowed, records outcomes
 ├── demo/             # Sandbox runner (demo 9 steps, attack suite, 5-agent sim)
 ├── docs/             # ABI, specifications, architectural decisions, threat model
@@ -89,7 +89,7 @@ Security relies on strict non-transferability, off-chain salted identity anchors
 
 ## Roadmap & Status
 
-- **Delivered (Level M / V1 Core)**: pure rules engine, `permis` and `missions` contracts, NEP-171 read-only views, lazy point updates, sandbox demo, attack test suite, robot simulation, static web viewer.
+- **Delivered (Level M / V1 Core)**: pure rules engine, `demerit` and `missions` contracts, NEP-171 read-only views, lazy point updates, sandbox demo, attack test suite, robot simulation, static web viewer.
 - **Roadmap / Not built yet (Level MAX)**:
   - Decentralized peer jury with hash-commit-reveal voting (`EF-17`).
   - Automated client credibility deposits (`EF-17`).

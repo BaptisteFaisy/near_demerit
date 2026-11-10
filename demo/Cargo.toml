@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Sandbox scenarios for Permis à points: demo, attack, sim"
+description = "Sandbox scenarios for Demerit: demo, attack, sim"
 default-run = "demo"
 
 [dependencies]
@@ -15,6 +15,6 @@ serde_json.workspace = true
 serde.workspace = true
 openssl-sys = { version = "0.9", features = ["vendored"] }
 # Pure rules module, reused by `make sim` and to build the JSON arguments.
-permis = { path = "../contracts/permis", features = ["testing"] }
+demerit = { path = "../contracts/demerit", features = ["testing"] }
 # Host side: near-sdk needs a non-contract mode to build outside wasm.
 near-sdk = { workspace = true, features = ["unit-testing"] }
