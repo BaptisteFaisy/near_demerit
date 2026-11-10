@@ -46,6 +46,7 @@ pub struct PlatformView {
     pub active: bool,
     pub warnings: u8,
     pub approved_at: u64,
+    pub category: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

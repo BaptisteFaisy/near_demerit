@@ -43,3 +43,5 @@ jobs:
           fetch-depth: 1
       - name: Static page smoke test
         run: cd web && node scripts/smoke.mjs
+      - name: Actions module tests (CLI command + wallet link)
+        run: cd web && node scripts/actions-test.mjs

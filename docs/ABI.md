@@ -58,7 +58,7 @@ Appelant non agréé → `ERR_NOT_PLATFORM`. Plateforme suspendue → `ERR_PLATF
 | `check` | `{ "account": "…", "category": "…", "requirements": { "min_points": 9, "min_missions": 5, "max_invalidations": 0, "min_age_months": 12, "max_coefficient": 150 } }` | `{ "allowed": bool, "code": Option<String> }` |
 | `license` | `{ "token_id": "demerit-1" }` | l'enregistrement brut `License` |
 | `license_of` | `{ "account": "…", "category": "…" }` | l'enregistrement brut du permis vivant |
-| `platform` | `{ "account": "missions.testnet" }` | `{ "active": bool, "warnings": u8, "approved_at": u64 }` |
+| `platform` | `{ "account": "missions.testnet" }` | `{ "active": bool, "warnings": u8, "approved_at": u64, "category": String }` |
 | `delegation` | `{ "delegate": "agent1.lea.testnet", "category": "coursier" }` | `{ holder, delegate, category, expires_at } \| null` |
 | `fund` | `{}` | `U128` |
 | `credit` | `{ "account": "lea.testnet" }` | `U128` |

@@ -44,6 +44,7 @@ pub fn approve_platform(registry: &mut Demerit, category: String, account: Accou
             active: true,
             warnings: 0,
             approved_at: now(),
+            category: category.clone(),
         },
     );
 }
@@ -182,6 +183,15 @@ pub fn revoke_license(registry: &mut Demerit, account: AccountId, category: Stri
     );
 }
 
+/// The strike limit of a category's current scale, 3 if the category is gone.
+fn strike_limit(registry: &Demerit, category: &str) -> u8 {
+    registry
+        .categories
+        .get(&category.to_string())
+        .and_then(|c| c.rules(None).map(|r| r.platform_strike_limit))
+        .unwrap_or(3)
+}
+
 /// Third strike against a platform suspends its approval.
 pub fn strike_platform(registry: &mut Demerit, account: &AccountId) {
     assert_issuer(registry);
@@ -190,11 +200,7 @@ pub fn strike_platform(registry: &mut Demerit, account: &AccountId) {
         .get(account)
         .unwrap_or_else(|| env::panic_str(ERR_NOT_PLATFORM));
     platform.warnings = platform.warnings.saturating_add(1);
-    let limit = registry
-        .order
-        .first()
-        .map(|id| registry.category(id).versions[0].platform_strike_limit)
-        .unwrap_or(3);
+    let limit = strike_limit(registry, &platform.category);
     if platform.warnings >= limit {
         platform.active = false;
     }

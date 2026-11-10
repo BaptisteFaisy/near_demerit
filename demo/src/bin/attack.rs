@@ -190,11 +190,9 @@ async fn attack_withdraw(fx: &Fixture, table: &mut Table) -> Result<()> {
     let args = json!({ "category": CATEGORY });
     let outcome = call(&fx.lea, fx.registry.id(), "withdraw_bond_excess", args, 0).await?;
     let code = code_of(&outcome).unwrap_or_else(|| "aucun".to_string());
-    // A bond already below the requirement has no excess: the registry answers
-    // ERR_UNDER_BONDED, or ERR_NOTHING_TO_WITHDRAW if it reads the zero excess
-    // first. Both mean the same thing here: nothing leaves the bond.
-    let refused =
-        !outcome.is_success() && (code == ERR_UNDER_BONDED || code == ERR_NOTHING_TO_WITHDRAW);
+    // The bond sits below what the coefficient demands, so the registry refuses
+    // with ERR_UNDER_BONDED: nothing leaves the bond until it is topped up.
+    let refused = !outcome.is_success() && code == ERR_UNDER_BONDED;
     let label = "le titulaire retire sa caution sous le montant exigé";
     table.verdict(
         label,

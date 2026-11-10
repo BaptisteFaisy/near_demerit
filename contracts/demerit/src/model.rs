@@ -222,6 +222,8 @@ pub struct Platform {
     pub active: bool,
     pub warnings: u8,
     pub approved_at: u64,
+    /// Category it is approved for: its scale sets the strike limit.
+    pub category: String,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]

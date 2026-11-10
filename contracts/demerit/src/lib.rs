@@ -223,12 +223,14 @@ impl Demerit {
             active: false,
             warnings: 0,
             approved_at: 0,
+            category: String::new(),
         });
         PlatformView {
             account,
             active: p.active,
             warnings: p.warnings,
             approved_at: p.approved_at,
+            category: p.category,
         }
     }
 

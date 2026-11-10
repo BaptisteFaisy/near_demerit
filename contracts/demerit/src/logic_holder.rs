@@ -23,7 +23,12 @@ pub fn withdraw_bond_excess(registry: &mut Demerit, category: String) {
     let def = registry.category(&category);
     let dossier = registry.dossier(&license.identity);
     let required = rules::required_bond(def.base_bond, dossier.coefficient);
-    if license.bond <= required {
+    if license.bond < required {
+        // The bond is already below what the coefficient demands: refusing with
+        // ERR_UNDER_BONDED tells the holder to top up, not to wait.
+        env::panic_str(ERR_UNDER_BONDED);
+    }
+    if license.bond == required {
         env::panic_str(ERR_NOTHING_TO_WITHDRAW);
     }
     let excess = license.bond - required;
