@@ -117,8 +117,13 @@ main() {
     local root_balance
     root_balance=$(balance_near "$ROOT")
     log "root balance: $root_balance NEAR (the run needs about 8.5)"
-    python3 -c "import sys; sys.exit(0 if float('$root_balance') >= 8.5 else 1)" ||
-      echo "WARNING: $root_balance NEAR may not cover storage (~5.5) plus the scenario" >&2
+    # Storage is the hard floor: 3.3 NEAR for the registry wasm, 2.0 for the
+    # platform, plus the scenario. Below that the run cannot succeed.
+    if ! python3 -c "import sys; sys.exit(0 if float('$root_balance') >= 6.5 else 1)"; then
+      echo "FATAL: $ROOT holds $root_balance NEAR; at least 6.5 are needed" >&2
+      echo "       (registry wasm 321 kB = 3.3 NEAR, platform 181 kB = 2.0 NEAR)" >&2
+      exit 1
+    fi
   fi
   # Storage is 1 NEAR per 100 kB: the registry wasm costs ~3.3, the platform ~1.9.
   create_sub registry "3.6 NEAR"

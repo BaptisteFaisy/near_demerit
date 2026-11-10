@@ -43,8 +43,11 @@ All steps execute deterministically without secrets.
 | 4 | `make demo` | 9-step sandbox scenario (1 month = 2 s); the money invariant is re-checked after every step | `DEMO OK (10/10)` | ~60 s |
 | 5 | `make attack` | Executes 7 unauthorized / abusive operations | 7 rejected transactions, `ATTACK OK (7/7)` | ~20 s |
 | 6 | `make sim` | Simulates 5 autonomous agents over 24 months | Summary table, `SIM OK (5/5)` + invariant I2 | ~30 s |
-| 7 | `make web` | Serves the public query and dashboard page locally | HTTP server listening on `http://127.0.0.1:8080` | instant |
-| 8 | `make web-smoke`| Headless validation of the static web interface | `WEB OK` | ~5 s |
+| 7 | `make dev` | Local NEAR node seeded with a readable history + the page on http://localhost:8080 | `out/devnet.json` written, page answers with live data | ~40 s to start |
+| 8 | `make web-smoke` | Static checks on the page (routes, MIME types, `node --check`) | `WEB OK (11/11 checks)` | ~5 s |
+| 9 | `make web-ui-smoke` | Drives that page in headless Chrome against the seeded node | `UI OK (n/n)` + `/tmp/demerit-ui.png` | ~60 s |
+| 10 | `make testnet-dry` | Prints every testnet command without sending anything | the full command list, `TESTNET OK (dry-run)` | ~2 s |
+| 11 | `make testnet` | Faucet account, sub-accounts, both contracts deployed, scenario seeded | `TESTNET OK (n/n)`, addresses in `out/testnet.json` | ~5 min |
 
 ## Sandbox binary
 
