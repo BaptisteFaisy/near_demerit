@@ -37,6 +37,20 @@ All steps execute deterministically without secrets.
 | 7 | `make web` | Serves the public query and dashboard page locally | HTTP server listening on `http://127.0.0.1:8080` | instant |
 | 8 | `make web-smoke`| Headless validation of the static web interface | `WEB OK` | ~5 s |
 
+## Sandbox binary
+
+`make demo` and `make attack` run a real NEAR node in-process
+(`near-workspaces` 0.24 + `near-sandbox`). The first run downloads `neard`.
+If that download is blocked on your network, install a local sandbox and let
+the Makefile pick it up:
+
+```
+npm i -g near-sandbox@0.3.5           # or: cargo install near-sandbox
+export NEAR_SANDBOX_BIN_PATH=$(npm root -g)/near-sandbox/near-sandbox
+```
+
+No secret, no wallet, no testnet account is needed for any of the steps below.
+
 ## Architecture
 
 The project contains two contracts, a shared deterministic rules module, and an integration harness:

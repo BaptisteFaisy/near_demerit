@@ -3,7 +3,12 @@ WASM_DIR := target/wasm32-unknown-unknown/release
 # near-sdk 5.30 binds the on-chain host functions behind the `near` cfg.
 NEAR_RUSTFLAGS := --cfg near
 CARGO ?= cargo
-export NEAR_SANDBOX_BIN_PATH ?= $(HOME)/.local/near-sandbox/near-sandbox
+# near-workspaces 0.24 downloads neard on first use. When that download is
+# blocked, point this at a local binary (`npm i -g near-sandbox@0.3.5`).
+SANDBOX_LOCAL := $(HOME)/.local/near-sandbox/near-sandbox
+ifneq (,$(wildcard $(SANDBOX_LOCAL)))
+export NEAR_SANDBOX_BIN_PATH ?= $(SANDBOX_LOCAL)
+endif
 
 .PHONY: setup build test demo attack sim web web-smoke lint fmt clean
 
