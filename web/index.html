@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permis à points — registre public NEAR</title>
+<meta name="description" content="Consultation publique du registre des permis à points déployé sur NEAR.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Permis à points</h1>
+    <p class="sub">Registre public sur NEAR — points, caution, signalements et missions, lus en direct sur la chaîne.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="banner" class="banner" role="alert" hidden></div>
+  <div id="notice" class="notice" hidden></div>
+
+  <main id="main">
+
+    <section aria-labelledby="h-consult">
+      <h2 id="h-consult">1. Consultation publique</h2>
+      <form id="lookupForm" class="card form">
+        <div class="row">
+          <div class="field">
+            <label for="account">Compte NEAR</label>
+            <input id="account" name="account" type="text" inputmode="text" autocomplete="off"
+                   placeholder="lea.testnet" spellcheck="false" required>
+          </div>
+          <div class="field">
+            <label for="category">Catégorie</label>
+            <input id="category" name="category" type="text" list="categoryList"
+                   placeholder="coursier" autocomplete="off" spellcheck="false">
+            <datalist id="categoryList"></datalist>
+          </div>
+          <div class="field field-action">
+            <button id="submitBtn" type="submit">Consulter</button>
+          </div>
+        </div>
+        <p class="hint">La lecture est publique et gratuite. Aucun compte, aucune signature.</p>
+      </form>
+
+      <div id="result" hidden>
+        <div class="card" aria-labelledby="h-licence">
+          <h3 id="h-licence">Permis</h3>
+          <p class="badge" id="statusBadge">—</p>
+          <div class="gauge" role="img" aria-label="Jauge de points">
+            <div class="gauge-fill" id="pointsBar" style="width:0%"></div>
+          </div>
+          <p class="gauge-text" id="pointsText">—</p>
+          <dl class="kv">
+            <dt>Titulaire</dt><dd id="holder">—</dd>
+            <dt>Identité (empreinte)</dt><dd id="identity">—</dd>
+            <dt>Plafond</dt><dd id="cap">—</dd>
+            <dt>Coefficient</dt><dd id="coef">—</dd>
+            <dt>Caution versée</dt><dd id="bond">—</dd>
+            <dt>Caution exigée</dt><dd id="bondRequired">—</dd>
+            <dt>Invalidations</dt><dd id="invalidations">—</dd>
+            <dt>Prochaine régénération</dt><dd id="nextRegen">—</dd>
+            <dt>Prochain gain de plafond</dt><dd id="nextCapGain">—</dd>
+            <dt>Motifs de refus</dt><dd id="reasons">—</dd>
+          </dl>
+        </div>
+
+        <div class="card" aria-labelledby="h-license">
+          <h3 id="h-license">Fiche du permis (vue <code>license</code>)</h3>
+          <dl class="kv">
+            <dt>Catégorie</dt><dd id="licCategory">—</dd>
+            <dt>Points enregistrés</dt><dd id="licPoints">—</dd>
+            <dt>Plafond enregistré</dt><dd id="licCap">—</dd>
+            <dt>Caution enregistrée</dt><dd id="licBond">—</dd>
+            <dt>Missions sans signalement</dt><dd id="licMissionsOk">—</dd>
+            <dt>Version du barème</dt><dd id="licRulesVersion">—</dd>
+          </dl>
+        </div>
+
+        <div class="card" aria-labelledby="h-nft">
+          <h3 id="h-nft">2. Permis en un coup d'œil</h3>
+          <p class="nft-title" id="nftTitle">—</p>
+          <p class="muted">Titre calculé par le contrat à la lecture : c'est ce qu'affiche le wallet.</p>
+          <dl class="kv">
+            <dt>Token</dt><dd id="nftTokenId">—</dd>
+            <dt>Propriétaire</dt><dd id="nftOwner">—</dd>
+            <dt>Édition</dt><dd id="nftEdition">—</dd>
+          </dl>
+        </div>
+
+        <div class="card" aria-labelledby="h-reports">
+          <h3 id="h-reports">Derniers signalements (20)</h3>
+          <table>
+            <caption class="sr-only">Derniers signalements enregistrés sur le permis</caption>
+            <thead><tr><th scope="col">Mission</th><th scope="col">Classe</th><th scope="col">Date</th><th scope="col">État</th></tr></thead>
+            <tbody id="reportsBody"></tbody>
+          </table>
+          <p class="muted" id="reportsEmpty" hidden>Aucun signalement enregistré.</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-missions">
+      <h2 id="h-missions">3. Tableau des missions</h2>
+      <div class="card">
+        <div class="row row-tight">
+          <button id="missionsRefresh" type="button">Rafraîchir</button>
+          <span class="muted" id="missionsStatus"></span>
+        </div>
+        <table>
+          <caption class="sr-only">Missions publiées sur la plateforme</caption>
+          <thead><tr><th scope="col">Id</th><th scope="col">Récompense</th><th scope="col">État</th><th scope="col">Prestataire</th><th scope="col">Issue</th></tr></thead>
+          <tbody id="missionsBody"></tbody>
+        </table>
+        <p class="muted" id="missionsEmpty" hidden>Aucune mission publiée.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-fund">
+      <h2 id="h-fund">4. Fonds de garantie</h2>
+      <div class="card">
+        <p class="fund" id="fundValue">—</p>
+        <p class="muted">Cautions prélevées et dépôts de recours qui alimentent l'indemnisation des clients.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <p>Lecture seule via JSON-RPC NEAR. Aucun framework, aucune dépendance externe.</p>
+  </footer>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[package]
+name = "permis"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Permis à points: a non-transferable professional licence with points, bond and dossier"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true, features = ["legacy"] }
+borsh.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[features]
+# Lets host-side crates (the sandbox demo, the simulation) link the rules
+# module without a wasm target: near-sdk then uses its mockchain backend.
+testing = ["near-sdk/unit-testing"]
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["legacy", "unit-testing"] }

@@ -1,2 +1,5 @@
-*.log
+/target
+/out
+web/node_modules
+web/out
 .DS_Store

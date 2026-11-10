@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Toolchain
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo --version
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ hashFiles('Cargo.lock') }}
+      - name: Unit tests (rules engine, clock simulated)
+        run: cargo test -p permis
+      - name: Build wasm
+        run: |
+          RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release -p permis -p missions
+          ls -l target/wasm32-unknown-unknown/release/permis.wasm target/wasm32-unknown-unknown/release/missions.wasm
+  page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Static page smoke test
+        run: cd web && node scripts/smoke.mjs
