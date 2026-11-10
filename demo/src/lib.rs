@@ -38,10 +38,8 @@ pub const REWARD: u128 = NEAR / 10;
 pub const IDENTITY_LEA: &str = "fp-lea";
 pub const TOKEN_ID: &str = "permis-1";
 
-const MAX_BLOCKS: u64 = 120;
 const MAX_STEPS: usize = 200;
 const MAX_SETTLE: usize = 6;
-const PROBE_BLOCKS: u64 = 10;
 
 pub fn rules() -> Rules {
     Rules::default_scale(MONTH_NS)
