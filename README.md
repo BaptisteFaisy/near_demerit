@@ -4,6 +4,15 @@ Reputation you can lose, not sell.
 
 NEAR Hackathon 2026 — Ticket 10 "NFTs That Do Something" (Deadline: Nov 14, 2026, 23:59 UTC).
 
+## Live
+
+- **Public page**: https://near-demerit.vercel.app — read-only dashboard over the registry
+  (status, access check, NFT view, holder panel, mission board, issuer console, scale,
+  guarantee fund, and the 9-step scenario). Every write action produces a `near-cli-rs`
+  command to copy or a MyNearWallet signing link; the page never holds a key.
+- **Testnet**: `demerit.testnet` (registry) and `missions.demerit.testnet` (platform) are
+  deployed by `scripts/testnet.sh`; addresses land in `web/config.js` and below once live.
+
 ## What it does
 
 - **Non-transferable licence (Soulbound NEP-171)**: professional licence token locked to an identity; transfers fail with `ERR_SOULBOUND`.
