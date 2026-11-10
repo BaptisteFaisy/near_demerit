@@ -1,13 +1,13 @@
-# Décisions d'architecture (ADR) — Permis à points
+# Décisions d'architecture (ADR) — Demerit
 
-Ce document consigne les choix structurants pris pour l'implémentation du permis à points sur NEAR Protocol.
+Ce document consigne les choix structurants pris pour l'implémentation de Demerit (permis professionnel à points) sur NEAR Protocol.
 
 ---
 
 ### D1 — Barème en fonctions pures testables hors chaîne
 - **Décision** : Le barème de calcul des points, des plafonds, des régénérations et des coefficients est isolé dans un module Rust autonome (`contracts/demerit/src/rules.rs`), exempt de tout appel à l'environnement de la machine virtuelle NEAR (`near_sdk::env`).
 - **Justification** : Permet de tester exhaustivement la logique métier via `cargo test` standard en quelques millisecondes, sans déployer de sandbox ni instancier de runtime blockchain.
-- **Conséquence** : Ce module pur est directement réutilisé par le binaire de simulation (`demo/bin/sim.rs`) et le scénario sandbox pour garantir une parité comportementale absolue.
+- **Conséquence** : Ce module pur est directement réutilisé par le binaire de simulation (`demo/src/bin/sim.rs`) et le scénario sandbox pour garantir une parité comportementale absolue.
 
 ---
 
@@ -33,7 +33,7 @@ Ce document consigne les choix structurants pris pour l'implémentation du permi
 ---
 
 ### D5 — Mission unique par plateforme
-- **Décision** : L'unicité d'une mission enregistrée s'appuie sur une clé composite associant l'identifiant de compte de la plateforme agréée et l'identifiant local de la mission (`format!("{}:{}", platform, mission_id)`).
+- **Décision** : L'unicité d'une mission enregistrée s'appuie sur une clé composite associant l'identifiant de compte de la plateforme agréée et l'identifiant local de la mission (`format!("{}/{}", platform, mission_id)`).
 - **Justification** : Permet à plusieurs plateformes concurrentes d'utiliser des numérotations indépendantes sans risque de collision ou de rejeu sur le registre commun.
 - **Conséquence** : Aucun identifiant universel complexe n'a besoin d'être coordonné hors chaîne entre les plateformes partenaires.
 
