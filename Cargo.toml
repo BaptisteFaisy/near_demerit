@@ -21,3 +21,6 @@ opt-level = "z"
 lto = true
 debug = false
 overflow-checks = true
+# Smaller wasm = cheaper testnet storage (1 NEAR per 100 kB).
+panic = "abort"
+strip = true

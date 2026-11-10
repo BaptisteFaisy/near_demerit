@@ -2,4 +2,6 @@
 /out
 web/node_modules
 web/out
+web/.vercel
+web/.env.local
 .DS_Store
