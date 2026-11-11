@@ -1,16 +1,18 @@
 /* Demerit — public consultation page & dashboard. Zero build, zero dependency. */
 (function () {
   'use strict';
-  var DEFAULTS = { rpc: 'https://archival-rpc.testnet.near.org', contract: '', missions: '', category: 'coursier' };
+  var DEFAULTS = { rpc: 'https://rpc.testnet.fastnear.com', contract: '', missions: '', category: 'coursier' };
   // The public RPC sometimes answers without CORS headers or with a 429. The
   // page walks this list and sticks to the first endpoint that answers.
-  // Verified on 2026-11-11 from a browser origin: 200 + Access-Control-Allow-Origin.
-  // rpc.testnet.near.org answers 429 under load and sends no CORS header then,
-  // which a browser reports as a CORS failure — hence the ordered fallback.
+  // NEAR deprecates its public testnet RPC: it now answers
+  // "THIS ENDPOINT IS DEPRECATED ... Switch to https://fastnear.com" with a 429
+  // and no CORS header, which a browser reports as a CORS failure. FastNEAR is
+  // the recommended replacement; the list is walked in order on any failure.
+  // Verified 2026-11-11 from a browser origin: 200 + Access-Control-Allow-Origin.
   var RPC_FALLBACKS = [
-    'https://archival-rpc.testnet.near.org',
-    'https://rpc.testnet.near.org',
-    'https://near-testnet.drpc.org'
+    'https://rpc.testnet.fastnear.com',
+    'https://near-testnet.drpc.org',
+    'https://rpc.testnet.near.org'
   ];
   var cfg = resolveConfig(), lastStatus = null;
 
