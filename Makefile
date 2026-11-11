@@ -10,7 +10,7 @@ ifneq (,$(wildcard $(SANDBOX_LOCAL)))
 export NEAR_SANDBOX_BIN_PATH ?= $(SANDBOX_LOCAL)
 endif
 
-.PHONY: setup build test demo attack sim testnet testnet-dry web web-smoke lint fmt clean dev web-ui-smoke
+.PHONY: setup build test demo attack sim testnet testnet-dry web web-smoke web-ui-smoke web-live-smoke lint fmt clean dev
 
 ## Toolchain, contracts, and a first build. No network beyond crates.io.
 setup:
@@ -53,6 +53,11 @@ web-smoke:
 	cd web && node scripts/smoke.mjs
 
 ## Headless UI check against the live sandbox node: needs `make dev` running.
+## Drives the PUBLIC page (near-demerit.vercel.app) against the live testnet.
+web-live-smoke:
+	cd web && npm install --no-audit --no-fund >/dev/null 2>&1
+	cd web && node scripts/live-check.mjs
+
 web-ui-smoke:
 	cd web && npm install --no-audit --no-fund >/dev/null 2>&1
 	cd web && node scripts/ui-smoke.mjs

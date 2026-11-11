@@ -10,10 +10,18 @@ NEAR Hackathon 2026 — Ticket 10 "NFTs That Do Something" (Deadline: Nov 14, 20
   (status, access check, NFT view, holder panel, mission board, issuer console, scale,
   guarantee fund, and the 9-step scenario). Every write action produces a `near-cli-rs`
   command to copy or a MyNearWallet signing link; the page never holds a key.
-- **Registry contract**: `registry.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/registry.demerit.testnet))
-- **Demo platform contract**: `missions.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/missions.demerit.testnet))
+- **Registry contract**: `ledger.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/ledger.demerit.testnet))
+- **Demo platform contract**: `platform.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/platform.demerit.testnet))
 - **Root / Demo accounts**: `demerit.testnet`, `issuer.demerit.testnet`, `lea.demerit.testnet`, `lea2.demerit.testnet`, `client.demerit.testnet`, `agent1.lea.demerit.testnet`
-- **Replay deployment & seed**: run `make testnet` (idempotent; deploys both contracts, creates the `coursier` category with 600 s simulated months, issues two licences, seeds four missions `clean`/`light`/`medium`/`severe`, a 30-day delegation, and a won contest, and writes `web/config.js`).
+- **Seeded state** (live now): `lea` — 6/6 points, probation, coefficient 1.25, one invalidation,
+  3 flagged missions, a won appeal, bond topped above the requirement; `lea2` — 0 points,
+  suspended, under-bonded; guarantee fund 0.02 NEAR; client credit 0.04 NEAR; 5 missions
+  (`clean`, `light`, `medium`, `severe`, `severe`); a 30-day delegation to `agent1.lea`.
+- **Replay deployment & seed**: `make testnet` (idempotent: creates the accounts, deploys both
+  contracts, creates the `coursier` category with 600 s simulated months, issues two licences,
+  seeds five missions, a delegation and a won appeal, then writes `web/config.js`).
+- **Check the public page against the live chain**: `make web-live-smoke` → `LIVE OK (15/15)`
+  (headless Chrome on https://near-demerit.vercel.app, asserting real chain data per section).
 
 ## What it does
 

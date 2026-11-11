@@ -261,7 +261,9 @@ pub struct StatusView {
     pub cap: Points,
     pub identity: String,
     pub coefficient: BasisPoints,
+    #[serde(with = "yocto")]
     pub bond: u128,
+    #[serde(with = "yocto")]
     pub required_bond: u128,
     pub under_bonded: bool,
     pub invalidations: u32,

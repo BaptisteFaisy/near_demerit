@@ -27,8 +27,8 @@ DRY=0
 [ "${1:-}" = "--dry-run" ] && DRY=1
 
 
-REGISTRY="registry.$ROOT"
-PLATFORM="missions.$ROOT"
+REGISTRY="ledger.$ROOT"
+PLATFORM="platform.$ROOT"
 ISSUER="issuer.$ROOT"
 LEA="lea.$ROOT"
 LEA2="lea2.$ROOT"
@@ -140,10 +140,10 @@ print(json.dumps({
     "regen_points": 1, "regen_after_months": 6, "full_regen_after_months": 24,
     "stage_points": 4, "stage_streak": 5, "suspension_months": 6,
     "month_seconds": month,
-    "severe_compensation": "20000000000000000000",
+    "severe_compensation": "20000000000000000000000",
     "fund_share_pct": 20,
     "contest_window_seconds": 604800,
-    "contest_deposit": "20000000000000000000",
+    "contest_deposit": "20000000000000000000000",
     "platform_strike_limit": 3,
 }))
 PY
@@ -177,8 +177,8 @@ main() {
     fi
   fi
   # Storage is 1 NEAR per 100 kB: the registry wasm costs ~3.3, the platform ~1.9.
-  create_sub registry "3.6 NEAR"
-  create_sub missions "2.3 NEAR"
+  create_sub ledger "3.6 NEAR"
+  create_sub platform "2.3 NEAR"
   create_sub issuer "0.5 NEAR"
   create_sub lea "0.6 NEAR"
   create_sub lea2 "0.4 NEAR"
@@ -203,7 +203,7 @@ init_contracts() {
     "{\"registry\":\"$REGISTRY\",\"category\":\"$CATEGORY\",\"min_points\":null}" '0 NEAR' || log "platform already initialized"
   log "creating the category $CATEGORY (1 month = $((MONTH_NS / 1000000000)) s)"
   call "$ISSUER" "$REGISTRY" create_category \
-    "{\"id\":\"$CATEGORY\",\"rules\":$(rules_json),\"base_bond\":\"100000000000000000000\"}" '0 NEAR' || log "category already exists"
+    "{\"id\":\"$CATEGORY\",\"rules\":$(rules_json),\"base_bond\":\"100000000000000000000000\"}" '0 NEAR' || log "category already exists"
   log "approving the platform"
   call "$ISSUER" "$REGISTRY" approve_platform \
     "{\"category\":\"$CATEGORY\",\"account\":\"$PLATFORM\"}" '0 NEAR' || log "platform already approved"
@@ -260,7 +260,7 @@ mission() { # <outcome> — post, accept, close through the platform contract
   log "mission $MISSION_N ($outcome): on chain = $state"
   if [ "$state" = "closed" ]; then log "mission $MISSION_N already closed"; return 0; fi
   if [ "$state" = "none" ]; then
-    call "$CLIENT" "$PLATFORM" post '{"reward":"50000000000000000000"}' "$REWARD"
+    call "$CLIENT" "$PLATFORM" post '{"reward":"50000000000000000000000"}' "$REWARD"
   fi
   if [ "$state" != "accepted" ]; then
     # accept attaches 10 + 15 Tgas of cross-contract gas, keep some headroom.

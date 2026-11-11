@@ -38,6 +38,23 @@
     try { return BigInt(raw); } catch (e) { return 0n; }
   }
 
+  /* ------------------------------------------------------------- libellés FR */
+  // The contract returns machine codes; the page speaks French. One map, used
+  // everywhere, so a new code appears as-is instead of silently untranslated.
+  var LABELS = {
+    probation: 'probatoire', active: 'valide', suspended: 'suspendu',
+    revoked: 'révoqué', renounced: 'rendu',
+    applied: 'appliqué', contested: 'contesté', upheld: 'confirmé',
+    cancelled: 'annulé', prescribed: 'prescrit',
+    clean: 'conforme', light: 'léger', medium: 'moyen', severe: 'grave',
+    open: 'ouverte', taken: 'prise', closed: 'close'
+  };
+  function fr(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    var key = String(value);
+    return LABELS[key] || key;
+  }
+
   /* ------------------------------------------------ JSON-RPC Helper (Unique) */
   function b64encode(str) {
     var bytes = new TextEncoder().encode(str), bin = '';
@@ -103,7 +120,7 @@
   function renderStatus(st) {
     lastStatus = st; $('result').hidden = false;
     setText('holder', st.holder); setText('tokenId', st.token_id); setText('identity', st.identity);
-    setText('cap', st.cap); setText('statusLabel', st.status);
+    setText('cap', st.cap); setText('statusLabel', fr(st.status));
     setText('coef', ((Number(st.coefficient || 0) / 100).toFixed(2)) + ' ×');
     setText('bond', fmtNear(st.bond)); setText('bondRequired', fmtNear(st.required_bond));
     setText('invalidations', st.invalidations);
@@ -112,7 +129,7 @@
     setText('nextRegen', st.next_regen_at ? fmtDate(st.next_regen_at) + fmtDuration(st.next_regen_at) : '—');
     setText('nextCapGain', st.next_cap_gain_at ? fmtDate(st.next_cap_gain_at) : '—');
     setText('reasons', (st.reasons && st.reasons.length) ? st.reasons.join(', ') : 'aucun');
-    var badge = $('statusBadge'); badge.textContent = String(st.status || '—'); badge.dataset.state = String(st.status || '');
+    var badge = $('statusBadge'); badge.textContent = fr(st.status); badge.dataset.state = String(st.status || '');
     $('underBondedBadge').hidden = !st.under_bonded;
     var cap = Number(st.cap || 0), pts = Number(st.points || 0);
     $('pointsBar').style.width = (cap > 0 ? Math.max(0, Math.min(100, (pts / cap) * 100)) : 0) + '%';
@@ -122,7 +139,7 @@
   function renderReports(reports) {
     var list = reports || []; $('reportsEmpty').hidden = list.length > 0;
     renderTableRows('reportsBody', list.map(function (r) {
-      return [r.mission_id, r.class, fmtDate(r.at), r.state, '-' + (r.points_lost || 0) + ' pt(s)', fmtNear(r.slashed)];
+      return [r.mission_id, fr(r.class), fmtDate(r.at), fr(r.state), '-' + (r.points_lost || 0) + ' pt(s)', fmtNear(r.slashed)];
     }));
   }
   function renderLicense(lic) {
@@ -160,7 +177,7 @@
       var badge = $('checkBadge'); badge.textContent = res.allowed ? 'AUTORISÉ (OUI)' : 'REFUSÉ (NON)';
       badge.className = 'badge ' + (res.allowed ? 'badge-ok' : 'badge-err');
       setText('chkAllowed', res.allowed ? 'Oui' : 'Non'); setText('chkCode', res.code || 'aucun (succès)');
-      setText('chkPoints', res.points); setText('chkStatus', res.status);
+      setText('chkPoints', res.points); setText('chkStatus', fr(res.status));
     }).catch(function (e) { banner('Check : ' + e.message); }).then(function () { $('checkBtn').disabled = false; });
   }
 
@@ -215,7 +232,7 @@
     viewCall(cfg.missions, 'missions', {}).then(function (list) {
       var ms = list || []; $('missionsEmpty').hidden = ms.length > 0;
       renderTableRows('missionsBody', ms.map(function (m) {
-        return [m.id, fmtNear(m.reward), m.state, m.worker || '—', m.outcome || '—'];
+        return [m.id, fmtNear(m.reward), fr(m.state), m.worker || '—', fr(m.outcome)];
       }));
       setText('missionsStatus', ms.length + ' mission(s)');
     }).catch(function (e) { setText('missionsStatus', ''); banner('Missions : ' + e.message); });
@@ -224,7 +241,7 @@
     if (!cfg.missions || isNaN(id)) return;
     viewCall(cfg.missions, 'mission', { mission_id: id }).then(function (m) {
       setText('mViewId', m.id); setText('mViewPoster', m.poster); setText('mViewWorker', m.worker || 'aucun');
-      setText('mViewReward', fmtNear(m.reward)); setText('mViewState', m.state); setText('mViewOutcome', m.outcome || 'en cours');
+      setText('mViewReward', fmtNear(m.reward)); setText('mViewState', fr(m.state)); setText('mViewOutcome', fr(m.outcome));
       setText('mViewCreated', fmtDate(m.created_at)); setText('mViewTaken', m.taken_at ? fmtDate(m.taken_at) : '—');
       setText('mViewClosed', m.closed_at ? fmtDate(m.closed_at) : '—');
     }).catch(function (e) { banner('Mission ' + id + ' : ' + e.message); });
