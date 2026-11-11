@@ -4,14 +4,16 @@ Reputation you can lose, not sell.
 
 NEAR Hackathon 2026 — Ticket 10 "NFTs That Do Something" (Deadline: Nov 14, 2026, 23:59 UTC).
 
-## Live
+## Live on testnet
 
 - **Public page**: https://near-demerit.vercel.app — read-only dashboard over the registry
   (status, access check, NFT view, holder panel, mission board, issuer console, scale,
   guarantee fund, and the 9-step scenario). Every write action produces a `near-cli-rs`
   command to copy or a MyNearWallet signing link; the page never holds a key.
-- **Testnet**: `demerit.testnet` (registry) and `missions.demerit.testnet` (platform) are
-  deployed by `scripts/testnet.sh`; addresses land in `web/config.js` and below once live.
+- **Registry contract**: `registry.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/registry.demerit.testnet))
+- **Demo platform contract**: `missions.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/missions.demerit.testnet))
+- **Root / Demo accounts**: `demerit.testnet`, `issuer.demerit.testnet`, `lea.demerit.testnet`, `lea2.demerit.testnet`, `client.demerit.testnet`, `agent1.lea.demerit.testnet`
+- **Replay deployment & seed**: run `make testnet` (idempotent; deploys both contracts, creates the `coursier` category with 600 s simulated months, issues two licences, seeds four missions `clean`/`light`/`medium`/`severe`, a 30-day delegation, and a won contest, and writes `web/config.js`).
 
 ## What it does
 

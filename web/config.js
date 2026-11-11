@@ -4,7 +4,7 @@
    Leave `contract` empty to keep the page in "not configured" mode. */
 window.DEMERIT_CONFIG = {
   rpc: 'https://rpc.testnet.near.org',
-  contract: '',
-  missions: '',
+  contract: 'registry.demerit.testnet',
+  missions: 'missions.demerit.testnet',
   category: 'coursier',
 };
