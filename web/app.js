@@ -1,7 +1,17 @@
 /* Demerit — public consultation page & dashboard. Zero build, zero dependency. */
 (function () {
   'use strict';
-  var DEFAULTS = { rpc: 'https://rpc.testnet.near.org', contract: '', missions: '', category: 'coursier' };
+  var DEFAULTS = { rpc: 'https://archival-rpc.testnet.near.org', contract: '', missions: '', category: 'coursier' };
+  // The public RPC sometimes answers without CORS headers or with a 429. The
+  // page walks this list and sticks to the first endpoint that answers.
+  // Verified on 2026-11-11 from a browser origin: 200 + Access-Control-Allow-Origin.
+  // rpc.testnet.near.org answers 429 under load and sends no CORS header then,
+  // which a browser reports as a CORS failure — hence the ordered fallback.
+  var RPC_FALLBACKS = [
+    'https://archival-rpc.testnet.near.org',
+    'https://rpc.testnet.near.org',
+    'https://near-testnet.drpc.org'
+  ];
   var cfg = resolveConfig(), lastStatus = null;
 
   function qs(k) { try { return new URLSearchParams(window.location.search).get(k); } catch (e) { return null; } }
@@ -66,21 +76,47 @@
       : Array.isArray(res) ? new Uint8Array(res) : null;
     return bytes ? new TextDecoder('utf-8').decode(bytes) : '';
   }
-  function viewCall(contract, method, args) {
-    if (!contract) return Promise.reject(new Error('Aucun contrat configuré.'));
-    var body = JSON.stringify({
-      jsonrpc: '2.0', id: '1', method: 'query',
-      params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: b64encode(JSON.stringify(args || {})) }
-    });
-    return fetch(cfg.rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function (j) {
-        if (j.error) throw new Error(j.error.data || j.error.message || 'Erreur RPC');
-        var raw = j.result && j.result.result;
-        if (raw === undefined || raw === null) throw new Error('Réponse vide pour ' + method);
-        return JSON.parse(bytesToUtf8(raw));
-      });
+  function rpcEndpoints() {
+    var list = [cfg.rpc].concat(RPC_FALLBACKS.filter(function (u) { return u !== cfg.rpc; }));
+    return list.filter(function (u, i) { return u && list.indexOf(u) === i; });
   }
+
+  function viewCall(contract, method, args) {
+    var body = JSON.stringify({
+      jsonrpc: '2.0', id: 'demerit', method: 'query',
+      params: {
+        request_type: 'call_function', finality: 'final', account_id: contract,
+        method_name: method, args_base64: b64encode(JSON.stringify(args || {}))
+      }
+    });
+    var endpoints = rpcEndpoints();
+    // Try each endpoint once, in order; the first answer wins for the session.
+    return endpoints.reduce(function (chain, url, i) {
+      return chain.catch(function (err) {
+        return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status + ' (' + url + ')');
+            return r.json();
+          })
+          .then(function (j) {
+            if (j.error) throw new Error(j.error.message || 'RPC error');
+            cfg.rpc = url; // remember the endpoint that worked
+            return decodeView(j.result && j.result.result, method);
+          })
+          .catch(function (e) {
+            if (i === endpoints.length - 1) throw new Error(method + ': ' + (err && err.message ? err.message : e.message));
+            throw e;
+          });
+      });
+    }, Promise.reject(new Error('no endpoint')));
+  }
+
+  function decodeView(raw, method) {
+    var text = bytesToUtf8(raw);
+    if (text === null) throw new Error(method + ': empty result');
+    try { return JSON.parse(text); } catch (e) { return text; }
+  }
+
 
   /* ------------------------------------------------------- Formatting Helpers */
   function $(id) { return document.getElementById(id); }
