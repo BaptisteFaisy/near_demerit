@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>92 · Glass — demerit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090b;--ink:#f4f4f5;--mut:#a1a1aa;--glass:rgba(255,255,255,.035);--edge:rgba(255,255,255,.12);--accent:#e8e3d6}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
+.wrap{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:16px;padding:16px;height:100vh}
+.panel{background:var(--glass);border:1px solid var(--edge);border-radius:28px;backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.left{display:flex;flex-direction:column;padding:26px 30px 26px}
+.top{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:22px;letter-spacing:-.03em}
+.brand svg{width:32px;height:32px;color:#fff}
+.top .sp{flex:1}.ic{width:38px;height:38px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;color:var(--mut);font-size:13px}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.badge{width:116px;height:116px;border-radius:50%;border:1px solid rgba(255,255,255,.55);display:grid;place-items:center;position:relative;margin-bottom:30px}
+.badge:before{content:'';position:absolute;inset:-9px;border-radius:50%;border:1px solid rgba(255,255,255,.14)}
+.badge b{font-size:46px;font-weight:500;letter-spacing:-.04em;line-height:1}
+.badge span{position:absolute;bottom:24px;font:500 9px 'JetBrains Mono';letter-spacing:.2em;color:var(--mut)}
+h1{font-size:54px;line-height:1.02;letter-spacing:-.035em;font-weight:600}
+h1 em{font-family:'Instrument Serif',serif;font-weight:400;font-style:italic;letter-spacing:-.01em;color:var(--accent);display:block;font-size:60px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:10px}
+.lead{color:var(--mut);max-width:430px;margin:22px auto 30px;font-size:16px}
+.cta{display:inline-flex;align-items:center;gap:16px;height:54px;padding:0 8px 0 26px;border-radius:999px;background:#fff;color:#111;font-weight:600;text-decoration:none}
+.cta i{width:40px;height:40px;border-radius:50%;background:#e4e4e7;display:grid;place-items:center;font-style:normal}
+.feed{margin-top:18px;border-radius:999px;border:1px solid var(--edge);padding:12px 20px;font-size:13px;color:var(--mut);display:flex;align-items:center;gap:10px;justify-content:center}
+.feed i{width:7px;height:7px;border-radius:50%;background:#a3e635;box-shadow:0 0 10px #a3e635}
+.right{display:grid;grid-template-rows:auto minmax(0,1fr) 232px;gap:12px;padding:20px;min-height:0;overflow:hidden}.left{min-height:0;overflow:hidden}
+.rh{display:flex;align-items:center;font:500 11px 'JetBrains Mono';letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
+.rh span:last-child{margin-left:auto;letter-spacing:.04em;text-transform:none}
+.cards{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:12px;min-height:0}
+.card{overflow:hidden;border-radius:20px;border:1px solid var(--edge);background:rgba(10,10,12,.45);padding:13px 16px;display:flex;flex-direction:column;min-height:0}
+.card.hi{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03));border-color:rgba(255,255,255,.22)}
+.card small{font:500 10px 'JetBrains Mono';letter-spacing:.12em;color:var(--mut);text-transform:uppercase;display:flex;justify-content:space-between}
+.card b{font-size:17px;font-weight:600;margin-top:8px;letter-spacing:-.01em}
+.card p{color:var(--mut);font-size:13px;margin-top:4px}
+.card .v{margin-top:auto;display:flex;align-items:baseline;gap:8px;padding-top:10px}
+.card .v strong{font-size:24px;font-weight:500;letter-spacing:-.03em}
+.card .v span{font-size:12px;color:var(--mut)}
+.pill{font:500 10px 'JetBrains Mono';padding:3px 8px;border-radius:999px;border:1px solid var(--edge);color:#d4d4d8;letter-spacing:.06em;text-transform:none}
+.pill.g{color:#bef264;border-color:rgba(190,242,100,.35)}.pill.r{color:#fda4af;border-color:rgba(253,164,175,.35)}
+.term{border-radius:20px;border:1px solid var(--edge);background:rgba(4,4,6,.72);display:flex;flex-direction:column;overflow:hidden}
+.term header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07);font:500 12px 'JetBrains Mono';color:var(--mut)}
+.term header i{width:10px;height:10px;border-radius:50%;background:#3f3f46}
+.term header span{margin-left:auto;color:#bef264}
+.term ol{list-style:none;padding:12px 16px;font:12.5px/1.8 'JetBrains Mono';overflow:hidden;flex:1}
+.term li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.term .m{color:#71717a}.term .c{color:#fafafa}.term .e{color:#e8e3d6}.term .x{color:#a1a1aa;padding-left:12px}.term .o{color:#bef264}.term .r{color:#fda4af}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="wrap">
+  <section class="panel left">
+    <div class="top"><div class="brand"><span id="mk"></span>demerit</div><span class="sp"></span><span class="ic">◐</span><span class="ic">≡</span></div>
+    <div class="center">
+      <div class="badge"><b>6</b><span>POINTS</span></div>
+      <h1>Reputation you can lose,<em>never sell.</em></h1>
+      <p class="lead">A points licence for gig workers. One soulbound NFT on NEAR, checked by every platform, backed by a deposit that repays the client.</p>
+      <a class="cta" href="#">Get my licence <i>→</i></a>
+    </div>
+    <div class="feed"><i></i>Live on NEAR testnet · lea.demerit.testnet read just now</div>
+  </section>
+  <section class="panel right">
+    <div class="rh"><span>Who is on a demerit licence</span><span>5 parties · 2 contracts</span></div>
+    <div class="cards" id="cards"></div>
+    <div class="term"><header><i></i><i></i><i></i>near-cli · on-chain activity<span>● testnet</span></header><ol id="log"></ol></div>
+  </section>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { MARK, PARTIES, terminal } from './common.js';
+document.getElementById('mk').outerHTML = MARK.replace('<svg', '<svg width="32" height="32"');
+const extra = { courier: ['6', '/ 12 pts', '<span class="pill g">allowed</span>'], client: ['0.20 Ⓝ', 'refunded', '<span class="pill">client</span>'],
+  platform: ['10', 'Tgas per check', '<span class="pill">any app</span>'], registry: ['free', 'to read', '<span class="pill">soulbound</span>'], fund: ['+0.20 Ⓝ', 'per serious fault', '<span class="pill">pool</span>'] };
+const cards = PARTIES.map((p, i) => { const [v, u, pl] = extra[p.k];
+  return `<div class="card${i === 0 ? ' hi' : ''}"><small>${p.role}${pl}</small><b>${p.name} · ${p.id}</b><p>${p.what}</p><div class="v"><strong>${v}</strong><span>${u}</span></div></div>`; });
+cards.push(`<div class="card"><small>Fresh account<span class="pill r">refused</span></small><b>lea2.testnet</b><p>Same fingerprint, same record. A new account erases nothing.</p><div class="v"><strong>✗</strong><span>ERR_IDENTITY_SUSPENDED</span></div></div>`);
+document.getElementById('cards').innerHTML = cards.join('');
+terminal(document.getElementById('log'), { max: 9 });
+
+// Planet with an atmosphere rim (the NEAR network) + a slow orbiting licence ring + star dust.
+const cv = document.getElementById('gl');
+const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+r.setPixelRatio(Math.min(devicePixelRatio, 2)); r.setClearColor(0x09090b);
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(40, 1, .1, 200);
+cam.position.set(0, 0, 14);
+const planet = new THREE.Mesh(new THREE.SphereGeometry(17, 160, 160), new THREE.ShaderMaterial({
+  uniforms: { t: { value: 0 } },
+  vertexShader: `varying vec3 n; varying vec3 p; void main(){ n=normalize(normalMatrix*normal); p=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader: `uniform float t; varying vec3 n; varying vec3 p;
+    float h(vec3 q){ return fract(sin(dot(q,vec3(12.9898,78.233,37.719)))*43758.5453); }
+    float noise(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.-2.*f);
+      return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                 mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z); }
+    void main(){ vec3 L=normalize(vec3(.35,.9,.4)); float d=max(dot(n,L),0.);
+      float c=noise(p*.55+vec3(t*.02,0,0))*.6+noise(p*1.6)*.3;
+      float rim=pow(1.-max(n.z,0.),3.);
+      vec3 col=vec3(.07,.07,.08)*(.3+d)+vec3(.30)*c*c*d+vec3(.78,.8,.88)*rim*(.25+.5*d);
+      gl_FragColor=vec4(col,1.); }` }));
+planet.position.set(-1, -21.5, -8); scene.add(planet);
+const ring = new THREE.Mesh(new THREE.TorusGeometry(19.5, .018, 8, 300), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55 }));
+ring.position.copy(planet.position); ring.rotation.set(1.25, .1, .2); scene.add(ring);
+const sat = new THREE.Mesh(new THREE.SphereGeometry(.14, 24, 24), new THREE.MeshBasicMaterial({ color: 0xf5f5f4 }));
+scene.add(sat);
+const sp = []; for (let i = 0; i < 1600; i++) sp.push((Math.random() - .5) * 80, Math.random() * 40 - 6, -20 - Math.random() * 30);
+const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)), new THREE.PointsMaterial({ color: 0xffffff, size: .06, transparent: true, opacity: .55 }));
+scene.add(stars);
+const resize = () => { r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+const t0 = performance.now(), v = new THREE.Vector3();
+(function loop() { const t = (performance.now() - t0) / 1000;
+  planet.material.uniforms.t.value = t; planet.rotation.y = t * .02;
+  v.set(Math.cos(t * .12 + 1.2) * 19.5, Math.sin(t * .12 + 1.2) * 19.5, 0).applyEuler(ring.rotation).add(ring.position); sat.position.copy(v);
+  r.render(scene, cam); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>

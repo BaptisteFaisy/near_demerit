@@ -1,0 +1,236 @@
+{
+ "voice": "xcfbycT4BzrNSijbingw",
+ "who": "Baptiste",
+ "out": "demerit-demo-baptiste.mp4",
+ "lines": [
+  {
+   "id": "b01",
+   "chapter": "1 · Licence",
+   "pre": [
+    "role issuer",
+    "act kyc",
+    "act approve_platform"
+   ],
+   "text": "Léa is a courier. Demerit gives her a licence on NEAR: six points, and one NEAR as a deposit.",
+   "do": [
+    [
+     0.4,
+     "act issue"
+    ],
+    [
+     "65%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "b02",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "role client",
+    "act post",
+    "role pro"
+   ],
+   "text": "She takes a delivery. The mission contract first asks the registry on NEAR: is Léa allowed?",
+   "do": [
+    [
+     0.4,
+     "act accept"
+    ],
+    [
+     "65%",
+     "ring scene"
+    ]
+   ]
+  },
+  {
+   "id": "b03",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "role client"
+   ],
+   "text": "Job done: she is paid.",
+   "do": [
+    [
+     0.3,
+     "act close_clean"
+    ]
+   ]
+  },
+  {
+   "id": "b04",
+   "chapter": "3 · A fault",
+   "pre": [
+    "act post",
+    "role pro",
+    "act accept",
+    "role client"
+   ],
+   "text": "A medium fault: minus three points.",
+   "do": [
+    [
+     0.3,
+     "act close_medium"
+    ]
+   ]
+  },
+  {
+   "id": "b05",
+   "chapter": "4 · Time",
+   "text": "Six clean months: one point back, without a single transaction.",
+   "do": [
+    [
+     0.3,
+     "time 6"
+    ],
+    [
+     "60%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "b06",
+   "chapter": "5 · Serious fault",
+   "pre": [
+    "ring off",
+    "act post",
+    "role pro",
+    "act accept",
+    "role client"
+   ],
+   "text": "A serious fault: zero points, suspended. Her deposit pays the client twenty cents.",
+   "do": [
+    [
+     0.3,
+     "act close_severe"
+    ],
+    [
+     "65%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "b07",
+   "chapter": "6 · Refused",
+   "pre": [
+    "ring off",
+    "role client",
+    "act post",
+    "role pro"
+   ],
+   "text": "Suspended, she is refused new jobs.",
+   "do": [
+    [
+     0.3,
+     "act accept"
+    ]
+   ]
+  },
+  {
+   "id": "b08",
+   "chapter": "7 · New account",
+   "pre": [
+    "role issuer"
+   ],
+   "text": "A new account? Same person, same record: refused.",
+   "do": [
+    [
+     0.3,
+     "act issue2"
+    ]
+   ]
+  },
+  {
+   "id": "b09",
+   "chapter": "8 · Comeback",
+   "text": "Six months later she is back on probation.",
+   "do": [
+    [
+     0.3,
+     "time 6"
+    ]
+   ],
+   "pre": [
+    "role pro"
+   ]
+  },
+  {
+   "id": "b10",
+   "chapter": "8 · Comeback",
+   "pre": [
+    "role pro"
+   ],
+   "text": "Her deposit is now too low. Refused, she tops it up, accepted.",
+   "do": [
+    [
+     0.3,
+     "act accept"
+    ],
+    [
+     "40%",
+     "act topup"
+    ],
+    [
+     "72%",
+     "act accept"
+    ]
+   ]
+  },
+  {
+   "id": "b11",
+   "chapter": "9 · Not for sale",
+   "text": "And she cannot sell her licence: it is soulbound.",
+   "do": [
+    [
+     0.4,
+     "act transfer"
+    ]
+   ],
+   "pre": [
+    "role pro"
+   ]
+  },
+  {
+   "id": "b12",
+   "chapter": "10 · Paid back",
+   "pre": [
+    "role client"
+   ],
+   "text": "The client withdraws the compensation.",
+   "do": [
+    [
+     0.3,
+     "act withdraw"
+    ]
+   ]
+  },
+  {
+   "id": "b13",
+   "chapter": "Live on testnet",
+   "scene": "site",
+   "text": "All of it runs on NEAR testnet, and anyone can read it for free, without a wallet.",
+   "do": [
+    [
+     0.3,
+     "ring consult"
+    ]
+   ],
+   "pre": [
+    "type #account lea.demerit.testnet",
+    "click #submitBtn",
+    "waitdata"
+   ]
+  },
+  {
+   "id": "b14",
+   "chapter": "",
+   "scene": "end",
+   "text": "Demerit: reputation you can lose, not sell. Which job would you license first?",
+   "do": []
+  }
+ ]
+}

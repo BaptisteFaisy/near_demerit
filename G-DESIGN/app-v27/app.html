@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>demerit — the points licence for gig workers</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <a class="brand" href="index.html" aria-label="demerit home">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".25"/><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6.5V2M26.75 8.31L29 4.41M31.69 13.25L35.59 11M33.5 20H38M31.69 26.75L35.59 29M26.75 31.69L29 35.59M20 33.5V38M13.25 31.69L11 35.59M8.31 26.75L4.41 29M6.5 20H2M8.31 13.25L4.41 11M13.25 8.31L11 4.41"/></g><path d="M20 11l6.8 9-6.8 9-6.8-9z" fill="var(--accent)"/></svg>
+      <span>demerit</span>
+    </a>
+    <p class="tagline">The points licence for gig workers</p>
+    <span class="sp"></span>
+    <span class="net"><i></i>NEAR testnet</span>
+    <div class="who" id="who">
+      <button class="acct" id="acctBtn" aria-haspopup="true"><span class="av" id="acctAv">LM</span><span class="an"><b id="acctName">Léa Martin</b><i id="acctId">lea.testnet</i></span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      <div class="menu" id="acctMenu" hidden></div>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="side" id="side"></nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <section class="chain" aria-label="On-chain activity">
+    <header><span class="dots"><i></i><i></i><i></i></span><b>near-cli · on-chain activity</b><span>demerit.testnet · missions.testnet</span><span class="sp"></span><span class="inv" id="inv"></span><span class="live"><i></i>sandbox · same code as testnet</span></header>
+    <ol id="log"></ol>
+  </section>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<div id="modal" hidden></div>
+<script src="moteur.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+{
+ "voice": "xcfbycT4BzrNSijbingw",
+ "who": "Baptiste",
+ "out": "demerit-demo.mp4",
+ "lines": [
+  {
+   "id": "f01",
+   "chapter": "",
+   "text": "On gig platforms, a bad courier just opens a new account. The client he wronged is never paid back.",
+   "do": [
+    [
+     0.6,
+     "glide .lic"
+    ]
+   ]
+  },
+  {
+   "id": "f02",
+   "chapter": "",
+   "text": "Demerit is a points licence for gig workers, held as a soulbound NFT on NEAR.",
+   "do": [
+    [
+     0.4,
+     "ring .brand"
+    ],
+    [
+     "55%",
+     "glide #getLic"
+    ]
+   ]
+  },
+  {
+   "id": "f03",
+   "chapter": "1 · Get licensed",
+   "text": "Léa, a courier, verifies her identity. Only a salted fingerprint ever reaches the chain.",
+   "do": [
+    [
+     0.2,
+     "ring off"
+    ],
+    [
+     0.4,
+     "click #getLic"
+    ],
+    [
+     "58%",
+     "click #verify"
+    ]
+   ]
+  },
+  {
+   "id": "f04",
+   "chapter": "1 · Get licensed",
+   "text": "She locks one NEAR as a deposit: six points, on probation.",
+   "do": [
+    [
+     0.6,
+     "click #issue"
+    ],
+    [
+     "62%",
+     "ring .lic"
+    ]
+   ]
+  },
+  {
+   "id": "f05",
+   "chapter": "NEAR · named accounts",
+   "text": "NEAR accounts have readable names: this licence belongs to lea dot testnet.",
+   "do": [
+    [
+     0.2,
+     "ring .lic-id"
+    ],
+    [
+     "60%",
+     "ring .lic-pts"
+    ]
+   ]
+  },
+  {
+   "id": "f06",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "who sam",
+    "nav orders"
+   ],
+   "text": "Sam posts a delivery. The reward is held in escrow by the platform contract.",
+   "do": [
+    [
+     0.5,
+     "click #post"
+    ],
+    [
+     "65%",
+     "ring .chain"
+    ]
+   ]
+  },
+  {
+   "id": "f07",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "who lea",
+    "nav jobs"
+   ],
+   "text": "Léa accepts. Before assigning the job, the platform asks the demerit registry: is she allowed?",
+   "do": [
+    [
+     0.6,
+     "accept"
+    ],
+    [
+     "62%",
+     "ring .chain"
+    ]
+   ]
+  },
+  {
+   "id": "f08",
+   "chapter": "NEAR · contract calls",
+   "text": "On NEAR, that cross-contract call is cheap enough to run on every job, on every platform.",
+   "do": [
+    [
+     0.2,
+     "ring .chain"
+    ]
+   ]
+  },
+  {
+   "id": "f09",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off"
+   ],
+   "text": "She delivers. Sam rates it on time, and she gets paid.",
+   "do": [
+    [
+     0.3,
+     "deliver"
+    ],
+    [
+     "30%",
+     "who sam"
+    ],
+    [
+     "66%",
+     "rate clean"
+    ]
+   ]
+  },
+  {
+   "id": "f10",
+   "chapter": "3 · A fault",
+   "pre": [
+    "click #post",
+    "who lea",
+    "nav jobs",
+    "accept",
+    "deliver",
+    "who sam"
+   ],
+   "text": "The next parcel arrives damaged: minus three points, on every platform at once.",
+   "do": [
+    [
+     0.5,
+     "rate medium"
+    ]
+   ]
+  },
+  {
+   "id": "f11",
+   "chapter": "4 · Time",
+   "pre": [
+    "who lea",
+    "nav licence"
+   ],
+   "text": "Six months without a complaint: one point comes back, with no transaction.",
+   "do": [
+    [
+     0.4,
+     "click #ff"
+    ],
+    [
+     "60%",
+     "ring .lic-pts"
+    ]
+   ]
+  },
+  {
+   "id": "f12",
+   "chapter": "NEAR · free reads",
+   "text": "On NEAR, reading points is free: no gas, no account.",
+   "do": [
+    [
+     0.2,
+     "ring .chain"
+    ]
+   ]
+  },
+  {
+   "id": "f13",
+   "chapter": "5 · Serious fault",
+   "pre": [
+    "ring off",
+    "who sam",
+    "click #post",
+    "who lea",
+    "nav jobs",
+    "accept",
+    "deliver",
+    "who sam"
+   ],
+   "text": "Then a parcel is lost. Zero points: suspended for six months.",
+   "do": [
+    [
+     0.5,
+     "rate severe"
+    ]
+   ]
+  },
+  {
+   "id": "f14",
+   "chapter": "NEAR · money in code",
+   "text": "Sam is refunded at once, from her deposit and a guarantee fund. On NEAR, the contract itself holds and moves the money.",
+   "do": [
+    [
+     0.2,
+     "ring .ban"
+    ],
+    [
+     "58%",
+     "ring .chain"
+    ]
+   ]
+  },
+  {
+   "id": "f15",
+   "chapter": "6 · Refused",
+   "pre": [
+    "ring off",
+    "click #post",
+    "who lea",
+    "nav jobs"
+   ],
+   "text": "Suspended, she tries a new job. Refused.",
+   "do": [
+    [
+     0.5,
+     "accept"
+    ]
+   ]
+  },
+  {
+   "id": "f16",
+   "chapter": "7 · New account",
+   "pre": [
+    "who lea2"
+   ],
+   "text": "So she opens a fresh account. Same fingerprint, same record: refused.",
+   "do": [
+    [
+     0.3,
+     "click #getLic"
+    ],
+    [
+     "30%",
+     "click #verify"
+    ],
+    [
+     "55%",
+     "click #issue"
+    ]
+   ]
+  },
+  {
+   "id": "f17",
+   "chapter": "8 · Comeback",
+   "pre": [
+    "who lea",
+    "nav licence"
+   ],
+   "text": "Six months later she's back, but her deposit must be twenty-five percent higher.",
+   "do": [
+    [
+     0.4,
+     "click #ff"
+    ],
+    [
+     "60%",
+     "ring .lic-f"
+    ]
+   ]
+  },
+  {
+   "id": "f18",
+   "chapter": "8 · Comeback",
+   "pre": [
+    "ring off",
+    "nav jobs"
+   ],
+   "text": "Her next job is refused until she tops up her deposit. Then it goes through.",
+   "do": [
+    [
+     0.3,
+     "accept"
+    ],
+    [
+     "40%",
+     "nav wallet"
+    ],
+    [
+     "50%",
+     "click #topup"
+    ],
+    [
+     "72%",
+     "nav jobs"
+    ],
+    [
+     "80%",
+     "accept"
+    ]
+   ]
+  },
+  {
+   "id": "f19",
+   "chapter": "9 · Not for sale",
+   "pre": [
+    "nav licence"
+   ],
+   "text": "Sell the licence? Refused: it's soulbound.",
+   "do": [
+    [
+     0.5,
+     "click #sell"
+    ]
+   ]
+  },
+  {
+   "id": "f20",
+   "chapter": "NEAR · sub-accounts",
+   "text": "With NEAR sub-accounts, an AI agent can take jobs under her licence, with a limited key.",
+   "do": [
+    [
+     0.6,
+     "click #agent"
+    ]
+   ]
+  },
+  {
+   "id": "f21",
+   "chapter": "10 · Paid back",
+   "pre": [
+    "who sam",
+    "nav wallet"
+   ],
+   "text": "Sam withdraws his refund. Every NEAR is accounted for.",
+   "do": [
+    [
+     0.4,
+     "click #withdraw"
+    ],
+    [
+     "62%",
+     "ring .inv"
+    ]
+   ]
+  },
+  {
+   "id": "f22",
+   "chapter": "Live on testnet",
+   "pre": [
+    "ring off",
+    "nav check"
+   ],
+   "text": "And it's live: anyone can check Léa's real licence on NEAR testnet, no wallet needed.",
+   "do": [
+    [
+     0.4,
+     "click #doCheck"
+    ],
+    [
+     "70%",
+     "ring .grid2"
+    ]
+   ]
+  },
+  {
+   "id": "f23",
+   "chapter": "",
+   "scene": "end",
+   "text": "Demerit: reputation you can lose, not sell. Which job would you license first?",
+   "do": []
+  }
+ ]
+}
