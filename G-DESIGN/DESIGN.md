@@ -1277,3 +1277,28 @@ Planche contact : `planches/v26/captures/planche-contact.jpg` · index : `planch
 Second choix : 95 Yard OS, la plus « plateforme / réseau » ; elle montre bien que chaque app interroge le même registre.
 
 Changelog V25 → V26 : on repart de zéro (le noir + violet n'est plus imposé), 5 directions au lieu d'une, les parties deviennent des objets 3D, et le terminal est intégré à chaque mise en page.
+
+---
+
+## V28 — 2026-11-13 · le design retenu (Blueprint, V27) passe en production
+
+Le design choisi n'était plus qu'une planche : il habille maintenant la page publique du
+hackathon, et il ne ment pas sur les chiffres.
+
+- **Landing (`/`)** : le hero V27 (3D du registre, terminal qui tape les appels, slogan
+  « Reputation you can lose, not sell. »), plus une **bande live** qui lit la licence de
+  `lea.demerit.testnet` sur testnet et affiche points, statut, caution et coefficient réels.
+  Le cube-count suit la chaîne quand elle répond ; le replay 3D reste explicitement étiqueté
+  « scenario replay ».
+- **App (`/app.html`)** : le même design en produit, avec un sélecteur **Demo / Live testnet**.
+  En mode live, chaque nombre vient d'un `view` sur les contrats déployés ; les actions
+  d'écriture rendent la commande `near-cli-rs` et un lien de signature MyNearWallet — la page
+  ne détient aucune clé.
+- **Dashboard (`/dashboard.html`)** : le tableau de bord neuf sections, inchangé, en profondeur.
+- **Contraintes tenues** : zéro CDN (three.js vendorisé, police auto-hébergée), zéro build,
+  lecture seule par défaut, une seule implémentation par logique
+  (`chain.js` = JSON-RPC, `live.js` = lectures, `views.js` = vues communes démo/live).
+- **Preuve** : `make web-v28` (headless) → 14/14, 0 erreur JS, en local et sur
+  <https://near-demerit.vercel.app>.
+
+Changelog V27 → V28 : la planche devient le site ; le site devient la preuve.

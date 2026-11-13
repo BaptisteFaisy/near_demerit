@@ -275,3 +275,21 @@ les vecteurs Rust, sans toolchain Rust. À lancer : `node verify-rules.mjs`.
 - **Livraison PR Baptiste (Claude)** : `livraison-pr-baptiste/` + `demerit-PR-pour-Baptiste.zip` (45 fichiers G-DESIGN, script publier.ps1 testé en DryRun, PR.md). Push Claude refusé (403) → Baptiste commit/PR/merge. 2026-11-13 · Claude
 
 - **V26 (Claude)** : 5 planches `planches/v26/91-95` (Blueprint, Glass, Humanist, Pitwall, Yard OS) d apres iterate/hackodds/1x/msai/lando/terminal-industries. Reco 93. Non commite (commit = Baptiste). Phase : planches · round V26 · 2026-11-13 · Claude
+
+### V28 (2026-11-13) — le design V27 habille la page publique · Baptiste
+
+- **Port** : `G-DESIGN/app-v27` est porté dans `web/` — la landing Blueprint en `/`,
+  l'app en `/app.html`, l'ancien tableau de bord neuf sections en `/dashboard.html`.
+- **Live** : sélecteur **Demo / Live testnet** dans l'app. Le mode live lit
+  `ledger.demerit.testnet` et `platform.demerit.testnet` en JSON-RPC public (points, caution,
+  coefficient, invalidations, signalements, missions, fonds, crédit) et affiche les vrais chiffres.
+  Les écritures ne sont **jamais signées** dans la page : commande `near-cli-rs` prête à coller
+  + lien MyNearWallet (`web/actions.js`).
+- **Zéro CDN** : three.js vendorisé (`web/vendor/`), JetBrains Mono auto-hébergée (`web/fonts/`).
+  Le dépôt reste sans dépendance externe.
+- **Vérifications** : `web/scripts/v27-check.mjs` → `V28 CHECK OK (14/14)` (landing, app démo +
+  live, dashboard), 0 erreur JS ; `web/scripts/smoke.mjs` → 43/43 ; CI verte.
+  Déployé et revérifié en production : <https://near-demerit.vercel.app>.
+- **Reste** : endpoint issuer (3ᵉ suivi de la PR #1, non fait), **vidéo à refaire** (celle du
+  repo, `video/demerit-demo.mp4`, a été tournée sur l'ancien design V25, pas sur le Blueprint),
+  post X, soumission du hackathon (échéance 14/11 23:59 UTC).
