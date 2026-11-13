@@ -18,9 +18,6 @@
   function near(v) {
     try { return (Number(v) / 1e24).toFixed(2).replace(/\.00$/, ''); } catch (e) { return String(v); }
   }
-  function mount() {
-    var main = document.getElementById('main');
-    if (!main || location.hash.indexOf('#/licence') !== 0) return;
   function card() {
     return '<div class="card" id="demoLicences" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">' +
       '<b style="font:600 17px var(--display)">Demo licences — already issued on NEAR testnet</b>' +
@@ -43,7 +40,7 @@
       if (!window.DemeritLive) { row.textContent = 'read unavailable'; return; }
       window.DemeritLive.status(d.acct).then(function (s) {
         row.textContent = s.points + '/' + s.cap + ' pts · ' + (s.under_bonded ? 'under-deposit' : s.status);
-      }, function () { row.textContent = 'no licence on chain'; });
+      }, function (e) { row.textContent = 'read failed (RPC)'; });
     });
   }
   function mount() {
