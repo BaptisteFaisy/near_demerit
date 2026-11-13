@@ -75,7 +75,7 @@ async function captions(browser) {
 (async () => {
   fs.mkdirSync(RAW, { recursive: true });
   for (const f of fs.readdirSync(RAW)) { const p = path.join(RAW, f); if (fs.statSync(p).isFile()) fs.unlinkSync(p); }
-  const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', protocolTimeout: 120000,
+  const browser = await puppeteer.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', headless: 'new', protocolTimeout: 120000,
     args: ['--hide-scrollbars', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', `--window-size=${W},${H}`] });
   await captions(browser);
   const page = await browser.newPage();

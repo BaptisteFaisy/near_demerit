@@ -46,3 +46,24 @@ Script : `lines-final.json` (23 répliques, 300 mots). Lancement : `VIDEO=final`
 Contrôles : 137,1 s (< 2:20), aucun silence > 2 s, −16,6 LUFS, planche contact relue (23 plans).
 Changelog V1 → V2 : 2 vidéos → 1 · FR → EN · site V24 → V25 · tournage sur la version jouable du site A (plus de layout injecté) · problème posé d'entrée · NEAR étiqueté 5 fois.
 Les anciennes `demerit-demo-gaia.mp4` / `demerit-demo-baptiste.mp4` sont remplacées.
+
+## V3 — 2026-11-13 · le même film, tourné sur le design final (Blueprint V27)
+
+La V2 avait été tournée sur l'ancien design V25 (violet noir) et les noms de comptes
+d'origine (`demerit.testnet`, `missions.testnet`) alors que les contrats déployés sont
+`ledger.demerit.testnet` et `platform.demerit.testnet`. La V3 est re-tournée sur
+`web/app.html` (le design retenu), sans changer une réplique.
+
+Tournage : `APP=http://127.0.0.1:8128/app.html SITE=https://near-demerit.vercel.app/dashboard.html
+node capture.mjs final` — la mise en page vidéo n'est plus injectée (`layout.css` visait
+l'ancien DOM) : le film montre le vrai produit, tel qu'il est en ligne.
+
+Voix : les mp3 ElevenLabs n'étaient plus dans le dépôt (`voice-*/` est ignoré) et la clé
+n'était pas sur la machine. La narration a donc été **récupérée du film V2 déjà monté** :
+la bande de sous-titres change à chaque réplique → les instants de début de ligne sont
+relevés sur l'image, puis affinés sur l'audio (le silence de 0,12 s entre deux répliques) ;
+chaque réplique est découpée en `voice-final/<id>.fx.wav` et `durations.json` est reconstruit.
+Le calage a été vérifié : **écart maximal 0,0 ms** sur les 23 répliques.
+
+Contrôles : 137,3 s (< 2:20), audio identique à la V2 (même voix, même découpage),
+0 erreur JavaScript pendant le tournage, names de comptes corrects sur l'écran.
