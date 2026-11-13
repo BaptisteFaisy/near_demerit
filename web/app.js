@@ -1,423 +1,450 @@
-/* Demerit — public consultation page & dashboard. Zero build, zero dependency. */
+/* demerit — web app (option A). Every button runs the real contract rules (moteur.js is a 1:1 port of
+   contracts/demerit/src/*.rs + contracts/missions/src/lib.rs) and prints the matching on-chain calls.
+   The public check page can also read the live registry on NEAR testnet (JSON-RPC, no wallet). */
 (function () {
-  'use strict';
-  var DEFAULTS = { rpc: 'https://rpc.testnet.fastnear.com', contract: '', missions: '', category: 'coursier' };
-  // The public RPC sometimes answers without CORS headers or with a 429. The
-  // page walks this list and sticks to the first endpoint that answers.
-  // NEAR deprecates its public testnet RPC: it now answers
-  // "THIS ENDPOINT IS DEPRECATED ... Switch to https://fastnear.com" with a 429
-  // and no CORS header, which a browser reports as a CORS failure. FastNEAR is
-  // the recommended replacement; the list is walked in order on any failure.
-  // Verified 2026-11-11 from a browser origin: 200 + Access-Control-Allow-Origin.
-  var RPC_FALLBACKS = [
-    'https://rpc.testnet.fastnear.com',
-    'https://near-testnet.drpc.org',
-    'https://rpc.testnet.near.org'
-  ];
-  var cfg = resolveConfig(), lastStatus = null;
+'use strict';
+const { World } = window.DEMERIT;
+const CAT = 'coursier', PF = 'platform.demerit.testnet', REG = 'ledger.demerit.testnet';
+const w = new World();
+const $ = s => document.querySelector(s);
+const V = window.DemeritViews;
+const esc = V.esc, N = V.N, BOX = V.BOX, PAGE = V.PAGE, ICON = V.ICON;
 
-  function qs(k) { try { return new URLSearchParams(window.location.search).get(k); } catch (e) { return null; } }
-  function resolveConfig() {
-    var f = window.DEMERIT_CONFIG || {}, out = {};
-    Object.keys(DEFAULTS).forEach(function (k) {
-      var v = qs(k); if (v === null || v === '') v = f[k];
-      out[k] = String(v === null || v === undefined || v === '' ? DEFAULTS[k] : v).trim();
-    });
-    return out;
+/* ---------- mode: demo (simulation) | live (real testnet) ---------- */
+const MODE_KEY = 'demerit.mode';
+const Live = window.DemeritLive;
+const Chain = window.DemeritChain;
+const STATUS_EN = {
+  probation: 'Probation', probatoire: 'Probation', actif: 'Active', active: 'Active', valide: 'Active',
+  suspendu: 'Suspended', suspended: 'Suspended', revoque: 'Revoked', revoked: 'Revoked',
+  rendu: 'Renounced', renounced: 'Renounced'
+};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
+};
+const query = new URLSearchParams(location.search);
+const mode = () => (query.get('mode') || store.get(MODE_KEY) || 'demo') === 'live' ? 'live' : 'demo';
+const isLive = () => ui.mode === 'live';
+/* Same shape whether the numbers come from the simulation or from the chain. */
+const norm = s => s ? Object.assign({}, s, {
+  status: STATUS_EN[s.status] || s.status,
+  bond: Number(s.bond), required_bond: Number(s.required_bond)
+}) : null;
+
+/* ---------- people ---------- */
+const PEOPLE = {
+  lea:  { name: 'Léa Martin', acct: 'lea.demerit.testnet', role: 'Courier', ini: 'LM', cls: '', id: 'fp-lea', pages: ['licence', 'jobs', 'wallet', 'check'] },
+  sam:  { name: 'Sam Okafor', acct: 'client.demerit.testnet', role: 'Customer', ini: 'SO', cls: 'c', pages: ['orders', 'wallet', 'check'] },
+  lea2: { name: 'Léa Martin', acct: 'lea2.demerit.testnet', role: 'New account', ini: 'LM', cls: 'n', id: 'fp-lea', pages: ['licence', 'check'] }
+};
+/* ---------- plain-English refusals ---------- */
+function why(code) {
+  const s = w.status('lea.demerit.testnet', CAT);
+  return ({
+    ERR_LICENSE_SUSPENDED: ['Your licence is suspended', 'Zero points: no platform can give you jobs until ' + date(s ? s.suspended_until : 0) + '.'],
+    ERR_UNDER_BONDED: ['Your deposit is too low', 'You have ' + N(s && s.bond) + ' Ⓝ locked, but ' + N(s && s.required_bond) + ' Ⓝ is now required. Top it up to work again.'],
+    ERR_IDENTITY_SUSPENDED: ['Same person, same record', 'This identity already holds a suspended licence. A new account does not erase it.'],
+    ERR_IDENTITY_ALREADY_LICENSED: ['You already have a licence', 'One live licence per person.'],
+    ERR_SOULBOUND: ['A licence cannot be sold', 'It belongs to the person who earned it. Transfers are refused by the contract.'],
+    ERR_NO_LICENSE: ['You need a licence first', 'Platforms only give jobs to licensed couriers.'],
+    ERR_NOTHING_TO_WITHDRAW: ['Nothing to withdraw', '']
+  }[code]) || ['Refused', ''];
+}
+
+/* ---------- time (sandbox clock) ---------- */
+const T0 = Date.UTC(2026, 10, 13);
+const date = s => new Date(T0 + s * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const monthLabel = () => new Date(T0 + w.now * 1000).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+/* ---------- on-chain log ---------- */
+const EV = {
+  license_issued: e => 'license_issued · ' + e.holder + ' · ' + e.points + ' points', mission_posted: e => 'mission_posted · #' + e.id + ' · ' + N(e.reward) + ' Ⓝ in escrow',
+  mission_taken: e => 'mission_taken · #' + e.id, mission_closed: e => 'mission_closed · #' + e.id + ' · ' + e.outcome,
+  mission_recorded: e => 'mission_recorded', points_changed: e => 'points_changed · ' + e.before + ' → ' + e.after,
+  license_suspended: () => 'license_suspended · 6 months', bond_slashed: e => 'bond_slashed · ' + N(e.amount) + ' Ⓝ',
+  client_compensated: e => 'client_compensated · ' + N(e.amount) + ' Ⓝ → ' + e.client, bond_topped_up: e => 'bond_topped_up · ' + N(e.amount) + ' Ⓝ',
+  delegation_changed: e => 'delegation_changed · ' + e.delegate, withdrawn: e => 'withdrawn · ' + N(e.amount) + ' Ⓝ → ' + e.account, platform_approved: e => 'platform_approved · ' + e.account
+};
+function logLine(cls, html) {
+  const ol = $('#log'), li = document.createElement('li'); li.className = 'new'; li.innerHTML = '<span class="' + cls + '">' + html + '</span>';
+  ol.appendChild(li); while (ol.children.length > 7) ol.removeChild(ol.firstChild);
+}
+function call(signer, target, method, args, fn, opts = {}) {
+  const before = w.log.length;
+  logLine('c', '$ ' + esc(signer) + ' → ' + esc(target) + '.' + method + '(' + esc(args || '') + ')' + (opts.dep ? ' · deposit ' + opts.dep + ' Ⓝ' : ''));
+  if (opts.xcc) logLine('x', '  ↳ cross-contract call: ' + REG + '.is_allowed(' + esc(signer) + ') · 10 Tgas · callback on_allowed');
+  try {
+    const v = fn();
+    for (const e of w.log.slice(before)) { const f = EV[e.ev]; logLine('e', '  EVENT ' + esc(f ? f(e.data || {}) : e.ev)); }
+    if (opts.xcc) logLine('o', '  ✓ is_allowed → true · mission assigned');
+    else logLine('o', '  ✓ ok');
+    refresh(); return { ok: true, v };
+  } catch (err) {
+    const code = typeof err === 'string' ? err : (err && err.message) || 'ERR';
+    if (opts.xcc) logLine('x', '  ↳ is_allowed → false');
+    logLine('r', '  ✕ ' + esc(code));
+    refresh(); return { ok: false, code };
   }
+}
+function view(method, args, fn) {
+  logLine('m', '$ near view ' + REG + ' ' + method + '(' + esc(args) + ') · free · no account · no gas');
+  return fn();
+}
+function refresh() { const i = w.invariant(); $('#inv').textContent = 'I2 ' + (i.ok ? '✓' : '✕') + ' every NEAR accounted · ' + N(i.left) + ' Ⓝ'; }
 
-  /* ---------------------------------------------------------- amount parsing */
-  // YoctoNEAR amounts travel as decimal strings. A value that went through
-  // JSON.parse as a number may already be in exponential form: expand it
-  // instead of throwing on BigInt("1.25e+24").
-  function toBigInt(value) {
-    if (typeof value === 'bigint') return value;
-    if (value === null || value === undefined || value === '') return 0n;
-    var raw = String(value).trim();
-    if (/^-?\d+(\.\d+)?e[+-]?\d+$/i.test(raw)) {
-      var parts = raw.toLowerCase().split('e');
-      var mantissa = parts[0];
-      var fracDigits = (mantissa.split('.')[1] || '').length;
-      var digits = mantissa.replace('.', '');
-      // 1.25e+24 is 125 followed by 22 zeros, not 24.
-      var exp = parseInt(parts[1], 10) - fracDigits;
-      var sign = digits.charAt(0) === '-' ? '-' : '';
-      if (sign) digits = digits.slice(1);
-      if (exp >= 0) digits += new Array(exp + 1).join('0');
-      else digits = digits.slice(0, digits.length + exp);
-      raw = sign + digits;
+/* ---------- world setup: the issuer approves the delivery platform; other customers post jobs ---------- */
+w.approvePlatform(w.issuer, CAT, PF);
+const JOB = {};
+function seedJob(poster, title, route, reward) { const id = w.post(poster, reward, reward); JOB[id] = { title, route }; return id; }
+seedJob('nora.demerit.testnet', 'Lunch order · 2 bags', 'Café Lomi → Rue Saint-Maur', 0.12);
+seedJob('studio9.demerit.testnet', 'Documents · signature', 'Studio 9 → Place de Clichy', 0.08);
+w.log.length = 0;
+
+/* ---------- ui state ---------- */
+const ui = {
+  who: 'lea', page: 'licence', check: {}, delivered: {}, banner: null, liveAcct: 'lea.demerit.testnet', checked: null,
+  mode: mode(),
+  chain: { status: {}, missions: [], credit: '0', fund: '0', loading: false, error: null }
+};
+const me = () => PEOPLE[ui.who];
+const licOf = acct => isLive() ? norm(ui.chain.status[acct]) : norm(w.status(acct, CAT));
+
+function toast(title, body, cls) {
+  const t = document.createElement('div'); t.className = 'toast ' + (cls || ''); t.innerHTML = '<b>' + esc(title) + '</b>' + (body ? esc(body) : '');
+  const box = $('#toasts'); box.appendChild(t); while (box.children.length > 2) box.removeChild(box.firstChild); setTimeout(() => t.remove(), 4200);
+}
+
+/* ---------- header / nav ---------- */
+function renderChrome() {
+  const p = me();
+  $('#acctAv').textContent = p.ini; $('#acctAv').className = 'av ' + p.cls;
+  $('#acctName').textContent = p.name; $('#acctId').textContent = p.acct;
+  $('#modes').innerHTML = ['demo', 'live'].map(m =>
+    '<button data-mode="' + m + '" class="' + (ui.mode === m ? 'on' : '') + '">' + (m === 'demo' ? 'Demo' : 'Live testnet') + '</button>').join('');
+  const badge = $('#chainMode');
+  if (badge) { badge.textContent = isLive() ? '● live · ' + REG : 'sandbox · same code as testnet'; badge.classList.toggle('on', isLive()); }
+  $('#side').innerHTML = p.pages.map(k => {
+    const badge = k === 'jobs' ? openJobs().length : k === 'orders' ? toRate().length : 0;
+    return '<a href="#/' + k + '" data-page="' + k + '" class="' + (ui.page === k ? 'on' : '') + '">' + ICON[k] + PAGE[k] + (badge ? '<span class="badge">' + badge + '</span>' : '') + '</a>';
+  }).join('') + '<div class="clock"><small>' + (isLive() ? 'Chain time' : 'Sandbox time') + '</small><b id="month">' + (isLive() ? new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : monthLabel()) + '</b>' +
+    (isLive() ? '<span class="muted" style="font-size:12px">Points are recomputed from timestamps at read time.</span>' : '<button class="btn sm" id="ff">Fast-forward 6 months</button>') + '</div>';
+  $('#acctMenu').innerHTML = '<div class="mh">Switch account</div>' + Object.keys(PEOPLE).map(k => {
+    const q = PEOPLE[k]; return '<button class="mi' + (k === ui.who ? ' cur' : '') + '" data-who="' + k + '"><span class="av ' + q.cls + '">' + q.ini + '</span><span class="an"><b>' + q.name + ' · ' + q.role + '</b><i>' + q.acct + '</i></span></button>';
+  }).join('');
+}
+const openJobs = () => Object.values(w.missions).filter(m => m.state === 'open');
+const myJobs = () => Object.values(w.missions).filter(m => m.worker === me().acct);
+const samJobs = () => Object.values(w.missions).filter(m => m.poster === 'client.demerit.testnet');
+const toRate = () => samJobs().filter(m => m.state === 'taken' && ui.delivered[m.id]);
+
+/* ---------- pages ---------- */
+function bannerHTML() {
+  const b = ui.banner; if (!b) return '';
+  return '<div class="ban ' + b.cls + '"><div><b>' + esc(b.title) + '</b>' + esc(b.body) + (b.code ? ' <span class="code">' + esc(b.code) + '</span>' : '') + '</div></div>';
+}
+const P = {
+  licence() {
+    const p = me(), s = licOf(p.acct);
+    const reps = s ? s.recent_reports.slice().reverse() : [];
+    const OUT = { clean: ['On time', 'ok', '0'], light: ['Late', 'warn', '−1'], medium: ['Damaged parcel', 'warn', '−3'], severe: ['Lost parcel', 'no', '−6'] };
+    return '<div class="ph"><div><h1>My licence</h1><p>' + (s ? 'Any platform reads this before giving you a job. It is free to read, for anyone.' : 'Get licensed once, work on every platform that checks demerit.') + '</p></div></div>' + bannerHTML() + chainBanner() +
+      '<div class="grid2"><div style="display:flex;flex-direction:column;gap:16px">' + V.licenceCard(s, p, isLive() ? V.realDate : date) +
+      (s ? '<div style="display:flex;gap:10px"><button class="btn" id="agent">Add an AI agent</button><button class="btn dan" id="sell">Transfer licence</button></div>' : '') + '</div>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:10px;min-height:0"><b style="font:600 17px var(--display)">Record</b>' +
+      (reps.length ? reps.slice(0, 5).map(r => { const o = OUT[r.class] || [r.class, '', '']; return '<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span class="pill ' + o[1] + '">' + o[2] + ' pts</span><span>' + o[0] + '</span><span class="sp" style="flex:1"></span><span class="muted mono" style="font-size:13px">' + esc(r.mission_id) + '</span></div>'; }).join('')
+        : '<p class="muted" style="margin:0">' + (s ? 'No jobs yet.' : 'Your record follows your identity, not your account.') + '</p>') +
+      (s && s.invalidations ? '<p style="margin:6px 0 0;font-size:14px" class="muted">Licence invalidated ' + s.invalidations + '× · deposit price raised to ×' + (s.coefficient / 100).toFixed(2) + '</p>' : '') + '</div></div>';
+  },
+  jobs() {
+    if (isLive()) return V.liveJobs(liveCtx());
+    const mine = myJobs().filter(m => m.state === 'taken'), open = openJobs();
+    const row = (m, act) => { const j = JOB[m.id] || {}; const ck = ui.check[m.id];
+      return '<div class="job" data-job="' + m.id + '"><div class="ic">' + BOX + '</div><div><h3>' + esc(j.title || 'Delivery #' + m.id) + '</h3><p>' + esc(j.route || '') + ' · posted by ' + esc(m.poster) + '</p></div>' +
+        '<div class="act"><div class="rw">' + N(m.reward) + ' Ⓝ<small>reward in escrow</small></div>' + act + '</div>' +
+        (ck === 'wait' ? '<div class="ck"><span class="spin"></span>Checking your licence on NEAR… <span class="mono muted">platform.demerit.testnet → ledger.demerit.testnet.is_allowed</span></div>'
+          : ck && ck.ok ? '<div class="ck ok">✓ Licence valid — the job is yours.</div>'
+          : ck && ck.no ? '<div class="ck no"><b>✕ ' + esc(why(ck.no)[0]) + '.</b>&nbsp;' + esc(why(ck.no)[1]) + ' <span class="code">' + esc(ck.no) + '</span></div>' : '') + '</div>'; };
+    return '<div class="ph"><div><h1>Jobs</h1><p>Deliveries near you. Accepting asks the demerit registry if you are allowed.</p></div></div>' + bannerHTML() +
+      '<div class="jobs">' +
+      mine.map(m => row(m, ui.delivered[m.id] ? '<span class="pill">Waiting for rating</span>' : '<button class="btn pri" data-deliver="' + m.id + '">Mark as delivered</button>')).join('') +
+      open.slice().reverse().slice(0, 4).map(m => row(m, '<button class="btn pri" data-accept="' + m.id + '">Accept</button>')).join('') +
+      (!mine.length && !open.length ? '<div class="card muted">No jobs right now.</div>' : '') + '</div>';
+  },
+  orders() {
+    if (isLive()) return V.liveOrders(liveCtx());
+    const js = samJobs().slice().reverse();
+    const RATE = '<div class="rate"><button class="btn" data-rate="clean">On time <em>0</em></button><button class="btn" data-rate="light">Late <em>−1</em></button><button class="btn" data-rate="medium">Damaged <em>−3</em></button><button class="btn dan" data-rate="severe">Lost parcel <em>−6</em></button></div>';
+    const OUTW = { clean: 'Rated: on time', light: 'Rated: late', medium: 'Rated: damaged (−3 points)', severe: 'Rated: lost parcel (−6 points)' };
+    return '<div class="ph"><div><h1>My deliveries</h1><p>Post a delivery, then rate the courier. A serious fault is refunded from the courier\'s deposit.</p></div><span class="sp"></span><button class="btn pri" id="post">Post a delivery · 0.10 Ⓝ</button></div>' + bannerHTML() +
+      '<div class="jobs">' + js.slice(0, 4).map(m => { const j = JOB[m.id] || {};
+        const st = m.state === 'open' ? '<span class="pill">Waiting for a courier</span>' : m.state === 'taken' && !ui.delivered[m.id] ? '<span class="pill acc">On the way · ' + esc(m.worker) + '</span>' : m.state === 'taken' ? '<span class="pill ok">Delivered by ' + esc(m.worker) + '</span>' : '<span class="pill">' + OUTW[m.outcome] + '</span>';
+        return '<div class="job" data-job="' + m.id + '"><div class="ic">' + BOX + '</div><div><h3>' + esc(j.title) + '</h3><p>' + esc(j.route) + '</p></div><div class="act">' + st + '</div>' + (m.state === 'taken' && ui.delivered[m.id] ? '<div style="grid-column:1/-1">' + RATE.replace(/data-rate=/g, 'data-mid="' + m.id + '" data-rate=') + '</div>' : '') + '</div>';
+      }).join('') + (js.length ? '' : '<div class="card muted">No deliveries yet.</div>') + '</div>';
+  },
+  wallet() {
+    if (isLive()) return V.liveWallet(liveCtx());
+    if (ui.who === 'sam') {
+      const c = w.credits['client.demerit.testnet'] || 0, paid = ui.samWithdrawn || 0;
+      return '<div class="ph"><div><h1>Wallet</h1><p>When a courier causes a serious fault, the contract pays you from their deposit. No claim, no support ticket.</p></div></div>' + bannerHTML() +
+        '<div class="stats"><div class="stat"><small>Compensation available</small><b id="comp">' + N(c) + ' <span>Ⓝ</span></b></div><div class="stat"><small>Withdrawn</small><b>' + N(paid) + ' <span>Ⓝ</span></b></div><div class="stat"><small>Paid by</small><b style="font-size:20px;margin-top:12px">courier deposit</b></div></div>' +
+        '<div><button class="btn pri" id="withdraw">Withdraw ' + N(c) + ' Ⓝ</button></div>';
     }
-    try { return BigInt(raw); } catch (e) { return 0n; }
+    const s = licOf('lea.demerit.testnet');
+    const earned = Object.values(w.missions).filter(m => m.worker === 'lea.demerit.testnet' && m.state === 'closed').reduce((a, m) => a + m.reward, 0);
+    const need = s ? Math.max(0, s.required_bond - s.bond) : 0;
+    return '<div class="ph"><div><h1>Wallet</h1><p>Your deposit backs your work. Good years lower it; serious faults raise it.</p></div></div>' + bannerHTML() +
+      '<div class="stats"><div class="stat"><small>Earned from deliveries</small><b>' + N(earned) + ' <span>Ⓝ</span></b></div>' +
+      '<div class="stat"><small>Deposit locked</small><b id="bond">' + N(s && s.bond) + ' <span>Ⓝ</span></b><div class="bar"><i style="width:' + (s ? Math.min(100, s.bond / 1.5 * 100) : 0) + '%"></i><u style="left:' + (s ? s.required_bond / 1.5 * 100 : 0) + '%"></u></div></div>' +
+      '<div class="stat"><small>Required deposit</small><b>' + N(s && s.required_bond) + ' <span>Ⓝ</span></b><small style="margin-top:8px">price factor ×' + (s ? (s.coefficient / 100).toFixed(2) : '1.00') + '</small></div></div>' +
+      '<div style="display:flex;gap:10px"><button class="btn pri" id="topup"' + (need > 0 ? '' : '') + '>Top up deposit' + (need > 0 ? ' · +' + N(need) + ' Ⓝ' : '') + '</button></div>';
+  },
+  check() {
+    const r = ui.checked;
+    return '<div class="ph"><div><h1>Public check</h1><p>Anyone can verify a licence: no wallet, no account, no fee.</p></div></div>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:14px"><div class="search"><input id="q" value="' + esc(ui.liveAcct) + '" spellcheck="false"><button class="btn pri" id="doCheck">Check</button></div>' +
+      '<span class="muted" style="font-size:14px">Reads <span class="mono">ledger.demerit.testnet</span> on NEAR testnet, live, through public JSON-RPC.</span></div>' +
+      (r === 'wait' ? '<div class="card"><span class="spin" style="display:inline-block;vertical-align:middle"></span>&nbsp; Reading NEAR testnet…</div>' : r && r.err ? '<div class="ban no"><div><b>Could not read testnet</b>' + esc(r.err) + '</div></div>' : r ? V.checkCard(r) : '');
   }
+};
+/* ---------- live pages (real chain data) ---------- */
+function render() {
+  const p = me(); if (!p.pages.includes(ui.page)) ui.page = p.pages[0];
+  renderChrome(); $('#main').innerHTML = P[ui.page]();
+}
 
-  /* ------------------------------------------------------------- libellés FR */
-  // The contract returns machine codes; the page speaks French. One map, used
-  // everywhere, so a new code appears as-is instead of silently untranslated.
-  var LABELS = {
-    probation: 'probatoire', active: 'valide', suspended: 'suspendu',
-    revoked: 'révoqué', renounced: 'rendu',
-    applied: 'appliqué', contested: 'contesté', upheld: 'confirmé',
-    cancelled: 'annulé', prescribed: 'prescrit',
-    clean: 'conforme', light: 'léger', medium: 'moyen', severe: 'grave',
-    open: 'ouverte', taken: 'prise', closed: 'close'
+/* ---------- live testnet read (public check) ---------- */
+async function liveStatus(acct) {
+  try {
+    return await Live.status(acct);
+  } catch (e) {
+    return { err: 'No licence for ' + acct + ' on testnet, or the network is down.' };
+  }
+}
+
+/* ---------- live mode: read the chain, never sign it ---------- */
+function chainBanner() {
+  if (!isLive()) return '';
+  if (ui.chain.loading) return '<div class="ban info"><div><b>Reading NEAR testnet…</b> free view calls on ' + REG + '</div></div>';
+  if (ui.chain.error) return '<div class="ban no"><div><b>Testnet unreachable</b>' + esc(ui.chain.error) + '</div></div>';
+  return '<div class="ban info"><div><b>Live mode</b> every number on this page is read from ' + REG + ' on NEAR testnet, right now.</div></div>';
+}
+
+/* Context handed to the shared views for the live pages. */
+function liveCtx() {
+  return {
+    me, licOf, bannerHTML, chainBanner,
+    missions: () => ui.chain.missions,
+    credit: () => ui.chain.credit,
+    fund: () => ui.chain.fund,
+    toNear: Chain.toNear,
+    platform: PF
   };
-  function fr(value) {
-    if (value === null || value === undefined || value === '') return '—';
-    var key = String(value);
-    return LABELS[key] || key;
-  }
+}
 
-  /* ------------------------------------------------ JSON-RPC Helper (Unique) */
-  function b64encode(str) {
-    var bytes = new TextEncoder().encode(str), bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
+async function loadLive() {
+  if (!isLive()) return;
+  ui.chain.loading = true; ui.chain.error = null; render();
+  logLine('m', '$ near view ' + REG + ' status({account: "…"}) · testnet · free · no wallet');
+  try {
+    const accounts = Object.keys(PEOPLE).map(k => PEOPLE[k].acct);
+    ui.chain.status = await Live.statuses(accounts);
+    ui.chain.missions = await Live.missions();
+    ui.chain.credit = await Live.credit('client.demerit.testnet');
+    ui.chain.fund = await Live.fund();
+    const s = ui.chain.status[me().acct];
+    if (s) logLine('o', '  → ' + s.points + '/' + s.cap + ' points · ' + s.status + ' · deposit ' + s.bond + '/' + s.required_bond + ' Ⓝ · price factor ×' + (s.coefficient / 100).toFixed(2));
+    logLine('o', '  → ' + (ui.chain.missions || []).length + ' missions on ' + PF + ' · guarantee fund ' + ui.chain.fund + ' Ⓝ');
+  } catch (e) {
+    ui.chain.error = (e && e.message) || String(e);
+    logLine('r', '  ✕ ' + esc(ui.chain.error));
   }
-  function bytesToUtf8(res) {
-    var bytes = typeof res === 'string' ? Uint8Array.from(atob(res), function (c) { return c.charCodeAt(0); })
-      : Array.isArray(res) ? new Uint8Array(res) : null;
-    return bytes ? new TextDecoder('utf-8').decode(bytes) : '';
-  }
-  function rpcEndpoints() {
-    var list = [cfg.rpc].concat(RPC_FALLBACKS.filter(function (u) { return u !== cfg.rpc; }));
-    return list.filter(function (u, i) { return u && list.indexOf(u) === i; });
-  }
+  ui.chain.loading = false; render();
+}
 
-  function viewCall(contract, method, args) {
-    var body = JSON.stringify({
-      jsonrpc: '2.0', id: 'demerit', method: 'query',
-      params: {
-        request_type: 'call_function', finality: 'final', account_id: contract,
-        method_name: method, args_base64: b64encode(JSON.stringify(args || {}))
-      }
+function setMode(m) {
+  ui.mode = m === 'live' ? 'live' : 'demo';
+  store.set(MODE_KEY, ui.mode);
+  if (ui.mode === 'live') loadLive(); else render();
+}
+
+/* A write action in live mode: the page holds no key, so it hands over the
+   exact command to run, plus a wallet link when one can be built. */
+function openIntent(spec) {
+  const m = $('#modal');
+  m.innerHTML = '<div class="dlg"><h2>' + esc(spec.label || spec.method) + '</h2>' +
+    '<p class="muted" style="margin:0 0 14px">' + esc(spec.hint || 'This page never holds a key: run the command yourself, or sign it with your wallet.') + '</p>' +
+    '<pre class="cmd"><code>' + esc(DemeritActions.command(spec)) + '</code></pre>' +
+    '<div class="row"><button class="btn" id="copyCmd">Copy</button><button class="btn" id="walletBtn">Sign with MyNearWallet</button><span class="sp"></span><button class="btn" id="mx">Close</button></div>' +
+    '<div id="walletOut" class="muted" style="font-size:13px;margin-top:10px"></div></div>';
+  m.hidden = false;
+  $('#copyCmd').onclick = () => {
+    const cmd = DemeritActions.command(spec);
+    if (navigator.clipboard) navigator.clipboard.writeText(cmd).then(() => { $('#walletOut').textContent = 'Command copied.'; });
+    else $('#walletOut').textContent = cmd;
+  };
+  $('#walletBtn').onclick = () => {
+    $('#walletOut').textContent = 'Building the wallet link…';
+    DemeritActions.walletUrl(spec).then(url => {
+      $('#walletOut').innerHTML = url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Open MyNearWallet</a> (check the signing account)' : 'Wallet link unavailable: use the command above.';
     });
-    var endpoints = rpcEndpoints();
-    // Try each endpoint once, in order; the first answer wins for the session.
-    return endpoints.reduce(function (chain, url, i) {
-      return chain.catch(function (err) {
-        return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
-          .then(function (r) {
-            if (!r.ok) throw new Error('HTTP ' + r.status + ' (' + url + ')');
-            return r.json();
-          })
-          .then(function (j) {
-            if (j.error) throw new Error(j.error.message || 'RPC error');
-            cfg.rpc = url; // remember the endpoint that worked
-            return decodeView(j.result && j.result.result, method);
-          })
-          .catch(function (e) {
-            if (i === endpoints.length - 1) throw new Error(method + ': ' + (err && err.message ? err.message : e.message));
-            throw e;
-          });
-      });
-    }, Promise.reject(new Error('no endpoint')));
-  }
+  };
+}
 
-  function decodeView(raw, method) {
-    var text = bytesToUtf8(raw);
-    if (text === null) throw new Error(method + ': empty result');
-    try { return JSON.parse(text); } catch (e) { return text; }
+/* ---------- actions ---------- */
+function modal(html) { const m = $('#modal'); m.innerHTML = '<div class="dlg">' + html + '</div>'; m.hidden = false; }
+function closeModal() { $('#modal').hidden = true; }
+function getLicence() {
+  const p = me();
+  modal('<h2>Get your courier licence</h2><p class="muted" style="margin:0">Two steps. Your ID never goes on chain.</p><div class="steps"><i class="on"></i><i></i></div>' +
+    '<div class="idcard"><div class="ph"></div><div><b style="font-size:17px">' + esc(p.name) + '</b><br><span class="muted">ID card · checked by the Paris Courier Board</span></div></div>' +
+    '<div class="row"><button class="btn" id="mx">Cancel</button><button class="btn pri" id="verify">Verify my identity</button></div>');
+}
+function verifyId() {
+  const p = me();
+  logLine('m', '# off chain — the issuer checks the ID of ' + esc(p.name) + ' and keeps the salt');
+  logLine('m', '  fingerprint = hash(salt ‖ identity) → ' + p.id);
+  modal('<h2>Lock your deposit</h2><p class="muted" style="margin:0">Identity verified. Fingerprint <span class="fp">' + p.id + '</span> — a salted hash, nothing personal.</p><div class="steps"><i class="on"></i><i class="on"></i></div>' +
+    '<div class="card" style="display:flex;align-items:center;gap:14px"><b style="font:700 34px var(--display)">1.00 Ⓝ</b><span class="muted">deposit, locked in the licence. It repays clients if you cause a serious fault.</span></div>' +
+    '<div class="row"><button class="btn" id="mx">Cancel</button><button class="btn pri" id="issue">Lock 1 Ⓝ and get my licence</button></div>');
+}
+function issue() {
+  const p = me(); closeModal();
+  if (isLive()) return openIntent({
+    contract: REG, method: 'issue', args: { account: p.acct, category: CAT, identity: p.id },
+    deposit: '1', signer: 'issuer.demerit.testnet',
+    label: 'Issue the licence to ' + p.acct,
+    hint: 'Only the issuer can issue a licence: it checks the identity off chain and keeps the salt. The 1 Ⓝ deposit is locked in the licence.'
+  });
+  const r = call('issuer.demerit.testnet', REG, 'issue', '{account: "' + p.acct + '", identity: "' + p.id + '"}', () => w.issue(w.issuer, p.acct, CAT, p.id, 1), { dep: '1' });
+  if (r.ok) { ui.banner = null; toast('Licence issued', '6 points on probation · 1 Ⓝ deposit locked.', 'ok'); }
+  else { const y = why(r.code); ui.banner = { cls: 'no', title: y[0] + '.', body: ' ' + y[1], code: r.code }; toast(y[0], y[1], 'no'); }
+  render();
+}
+function accept(id) {
+  if (isLive()) return openIntent({
+    contract: PF, method: 'accept', args: { mission_id: id }, signer: 'lea.demerit.testnet',
+    label: 'Accept delivery #' + id,
+    hint: 'The platform calls ' + REG + '.is_allowed() first. If the licence is refused, the job is not assigned.'
+  });
+  ui.check[id] = 'wait'; ui.banner = null; render();
+  setTimeout(() => {
+    const r = call('lea.demerit.testnet', PF, 'accept', '{mission_id: ' + id + '}', () => w.accept('lea.demerit.testnet', id, CAT), { xcc: true });
+    ui.check[id] = r.ok ? { ok: true } : { no: r.code };
+    if (!r.ok) toast(why(r.code)[0], why(r.code)[1], 'no');
+    render();
+  }, 1100);
+}
+function deliver(id) { ui.delivered[id] = true; delete ui.check[id]; toast('Marked as delivered', 'Sam will rate the delivery.', 'ok'); render(); }
+function post() {
+  if (isLive()) return openIntent({
+    contract: PF, method: 'post', args: { reward: '100000000000000000000000' }, deposit: '0.1', signer: 'client.demerit.testnet',
+    label: 'Post a delivery · 0.10 Ⓝ',
+    hint: 'The 0.10 Ⓝ is held in escrow by the platform contract and paid to the courier when the delivery closes.'
+  });
+  const n = samJobs().length;
+  const T = [['Parcel · 1.2 kg', '11 Rue Oberkampf → 4 Place de la Bastille'], ['Flowers · fragile', 'Marché aux Fleurs → Rue de Rivoli'], ['Laptop · high value', 'Rue de Rennes → Avenue de France'], ['Groceries · 3 bags', 'Rue Cler → Rue de Grenelle'], ['Keys · urgent', 'Gare de Lyon → Rue de Charonne']][n % 5];
+  const r = call('client.demerit.testnet', PF, 'post', '{reward: 0.10}', () => w.post('client.demerit.testnet', 0.1, 0.1), { dep: '0.10' });
+  if (r.ok) { JOB[r.v] = { title: T[0], route: T[1] }; toast('Delivery posted', '0.10 Ⓝ held in escrow by the platform contract.', 'ok'); }
+  render();
+}
+function rate(id, outcome) {
+  if (isLive()) return openIntent({
+    contract: PF, method: 'close', args: { mission_id: id, outcome: outcome }, signer: 'client.demerit.testnet',
+    label: 'Rate delivery #' + id + ' — ' + outcome,
+    hint: 'The platform pays the courier, then calls ' + REG + '.record_mission(): points are removed and a serious fault refunds you from the deposit.'
+  });
+  const s0 = licOf('lea.demerit.testnet');
+  const r = call('client.demerit.testnet', PF, 'close', '{mission_id: ' + id + ', outcome: "' + outcome + '"}', () => w.close('client.demerit.testnet', id, outcome));
+  if (r.ok) { logLine('x', '  ↳ cross-contract call: ' + PF + ' → ' + REG + '.record_mission · courier paid ' + N(w.missions[id].reward) + ' Ⓝ');
+    const s1 = licOf('lea.demerit.testnet'), lost = (s0 ? s0.points : 0) - (s1 ? s1.points : 0);
+    if (outcome === 'severe') { const c = w.credits['client.demerit.testnet'] || 0; ui.banner = { cls: 'ok', title: 'You were compensated ' + N(c) + ' Ⓝ.', body: ' Paid from the courier\'s deposit by the contract. Withdraw it from your wallet.' }; toast('Compensated ' + N(c) + ' Ⓝ', 'From the courier\'s deposit.', 'ok'); }
+    else toast('Thanks for rating', lost ? 'The courier lost ' + lost + ' points.' : 'The courier keeps every point.', lost ? 'no' : 'ok');
   }
+  render();
+}
+function topup() {
+  const s = licOf('lea.demerit.testnet'); const need = s ? Math.max(0.01, Math.round((s.required_bond - s.bond) * 100) / 100) : 0;
+  if (isLive()) return openIntent({
+    contract: REG, method: 'top_up_bond', args: { category: CAT }, deposit: String(need), signer: 'lea.demerit.testnet',
+    label: 'Top up deposit · +' + N(need) + ' Ⓝ',
+    hint: 'While the deposit is under the required amount, every platform refuses the licence.'
+  });
+  const r = call('lea.demerit.testnet', REG, 'top_up_bond', '{category: "courier"}', () => w.topUpBond('lea.demerit.testnet', CAT, need), { dep: N(need) });
+  if (r.ok) { ui.banner = { cls: 'ok', title: 'Deposit topped up.', body: ' ' + N(s.bond + need) + ' Ⓝ locked — you can take jobs again.' }; toast('Deposit topped up', '+' + N(need) + ' Ⓝ', 'ok'); }
+  render();
+}
+function sell() {
+  if (isLive()) return openIntent({
+    contract: REG, method: 'nft_transfer', args: { receiver_id: 'client.demerit.testnet', token_id: 'demerit-1' },
+    deposit: '0.000000000000000000000001', signer: 'lea.demerit.testnet',
+    label: 'Try to sell the licence',
+    hint: 'The contract refuses with ERR_SOULBOUND: a licence never changes hands. Run it to see the refusal.'
+  });
+  const r = call('lea.demerit.testnet', REG, 'nft_transfer', '{receiver_id: "client.demerit.testnet", token_id: "demerit-1"}', () => w.nftTransfer(), { dep: '1 yocto' });
+  const y = why(r.code); ui.banner = { cls: 'no', title: y[0] + '.', body: ' ' + y[1], code: r.code }; toast(y[0], y[1], 'no'); render();
+}
+function agent() {
+  if (isLive()) return openIntent({
+    contract: REG, method: 'delegate', args: { category: CAT, delegate: 'agent1.lea.demerit.testnet', expires_at: Math.floor(Date.now() / 1000) + 90 * 86400 },
+    signer: 'lea.demerit.testnet',
+    label: 'Delegate to an AI agent',
+    hint: 'agent1.lea.demerit.testnet is a NEAR sub-account with a limited key. Its faults cost your points, and a suspension of yours stops it too.'
+  });
+  const r = call('lea.demerit.testnet', REG, 'delegate', '{delegate: "agent1.lea.demerit.testnet", expires: "+90 days"}', () => w.delegate('lea.demerit.testnet', CAT, 'agent1.lea.demerit.testnet', w.now + 90 * 86400));
+  if (r.ok) { ui.banner = { cls: 'info', title: 'agent1.lea.demerit.testnet can now take jobs under your licence.', body: ' A NEAR sub-account with a limited key. Its faults cost your points.' }; toast('AI agent added', 'agent1.lea.demerit.testnet · 90 days', 'ok'); }
+  render();
+}
+function withdraw() {
+  if (isLive()) return openIntent({
+    contract: REG, method: 'withdraw', args: {}, signer: 'client.demerit.testnet',
+    label: 'Withdraw compensation',
+    hint: 'Moves your credit to your account. Every NEAR stays accounted for (invariant I2).'
+  });
+  const c = w.credits['client.demerit.testnet'] || 0;
+  const r = call('client.demerit.testnet', REG, 'withdraw', '', () => w.withdraw('client.demerit.testnet'));
+  if (r.ok) { ui.samWithdrawn = (ui.samWithdrawn || 0) + c; ui.banner = { cls: 'ok', title: N(c) + ' Ⓝ sent to your wallet.', body: ' Every NEAR is accounted for.' }; toast('Withdrawn', N(c) + ' Ⓝ', 'ok'); }
+  render();
+}
+function fastForward() {
+  const s0 = licOf('lea.demerit.testnet');
+  w.advanceMonths(6);
+  const s1 = licOf('lea.demerit.testnet');
+  logLine('m', '# 6 months later — no transaction sent');
+  if (s1) view('status', '{account: "lea.demerit.testnet"}', () => logLine('o', '  → ' + s1.points + ' points · ' + (s1.status === 'suspendu' ? 'suspended' : s1.status) + ' · recomputed from timestamps at read time'));
+  const d = s1 && s0 ? s1.points - s0.points : 0;
+  toast('6 months later', d > 0 ? 'Léa regained ' + d + ' point' + (d > 1 ? 's' : '') + ' — without a single transaction.' : 'Time passes.', 'ok');
+  ui.banner = null; render();
+}
+async function doCheck() {
+  const q = ($('#q').value || '').trim(); ui.liveAcct = q; ui.checked = 'wait'; render();
+  logLine('m', '$ near view ledger.demerit.testnet status({account: "' + esc(q) + '"}) · testnet · free · no wallet');
+  const r = await liveStatus(q); ui.checked = r;
+  if (!r.err) logLine('o', '  → ' + r.points + '/' + r.cap + ' points · ' + r.status + ' · deposit ' + N(r.bond) + ' Ⓝ');
+  render();
+}
 
-
-  /* ------------------------------------------------------- Formatting Helpers */
-  function $(id) { return document.getElementById(id); }
-  function clear(el) { if (el) while (el.firstChild) el.removeChild(el.firstChild); }
-  function banner(msg) { var b = $('banner'); if (b) { b.textContent = msg; b.hidden = !msg; } }
-  function setText(id, val) { var el = $(id); if (el) el.textContent = (val === null || val === undefined || val === '') ? '—' : String(val); }
-  function fmtNear(yocto) {
-    try {
-      var v = toBigInt(yocto), whole = v / 1000000000000000000000000n;
-      var frac = (v % 1000000000000000000000000n).toString().padStart(24, '0').slice(0, 4);
-      return whole.toLocaleString('fr-FR') + (frac === '0000' ? '' : ',' + frac) + ' Ⓝ';
-    } catch (e) { return String(yocto); }
-  }
-  function fmtDate(ns) {
-    var n = Number(ns || 0); if (!n) return '—';
-    var d = new Date(Math.floor(n / 1e6)); return isNaN(d.getTime()) ? '—' : d.toLocaleString('fr-FR');
-  }
-  function fmtDuration(ns) {
-    var n = Number(ns || 0); if (!n) return '';
-    var d = Math.round(n / 86400e9); if (d >= 1) return ' (dans ' + d + ' j)';
-    var h = Math.round(n / 3600e9); return ' (dans ' + (h >= 1 ? h + ' h' : Math.max(1, Math.round(n / 60e9)) + ' min') + ')';
-  }
-  function renderTableRows(tbodyId, rows) {
-    var tbody = $(tbodyId); if (!tbody) return;
-    clear(tbody);
-    rows.forEach(function (cells) {
-      var tr = document.createElement('tr');
-      cells.forEach(function (c) {
-        var td = document.createElement('td'); td.textContent = (c === null || c === undefined) ? '—' : String(c);
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-  }
-
-  /* ------------------------------------------------------ Section 1: Consult */
-  function renderStatus(st) {
-    lastStatus = st; $('result').hidden = false;
-    setText('holder', st.holder); setText('tokenId', st.token_id); setText('identity', st.identity);
-    setText('cap', st.cap); setText('statusLabel', fr(st.status));
-    setText('coef', ((Number(st.coefficient || 0) / 100).toFixed(2)) + ' ×');
-    setText('bond', fmtNear(st.bond)); setText('bondRequired', fmtNear(st.required_bond));
-    setText('invalidations', st.invalidations);
-    setText('missionsRatio', (st.missions_ok || 0) + ' / ' + (st.missions_flagged || 0));
-    setText('suspendedUntil', st.suspended_until ? fmtDate(st.suspended_until) : 'aucune');
-    setText('nextRegen', st.next_regen_at ? fmtDate(st.next_regen_at) + fmtDuration(st.next_regen_at) : '—');
-    setText('nextCapGain', st.next_cap_gain_at ? fmtDate(st.next_cap_gain_at) : '—');
-    setText('reasons', (st.reasons && st.reasons.length) ? st.reasons.join(', ') : 'aucun');
-    var badge = $('statusBadge'); badge.textContent = fr(st.status); badge.dataset.state = String(st.status || '');
-    $('underBondedBadge').hidden = !st.under_bonded;
-    var cap = Number(st.cap || 0), pts = Number(st.points || 0);
-    $('pointsBar').style.width = (cap > 0 ? Math.max(0, Math.min(100, (pts / cap) * 100)) : 0) + '%';
-    $('pointsBar').dataset.level = pts === 0 ? 'zero' : (pts <= 3 ? 'low' : 'ok');
-    setText('pointsText', pts + ' / ' + cap + ' points');
-  }
-  function renderReports(reports) {
-    var list = reports || []; $('reportsEmpty').hidden = list.length > 0;
-    renderTableRows('reportsBody', list.map(function (r) {
-      return [r.mission_id, fr(r.class), fmtDate(r.at), fr(r.state), '-' + (r.points_lost || 0) + ' pt(s)', fmtNear(r.slashed)];
-    }));
-  }
-  function renderLicense(lic) {
-    if (!lic) return;
-    setText('licIssuedAt', fmtDate(lic.issued_at));
-    setText('licLastReport', lic.last_report_at ? fmtDate(lic.last_report_at) : 'aucun');
-    setText('licLastInval', lic.last_invalidation_at ? fmtDate(lic.last_invalidation_at) : 'aucune');
-    setText('licStreak', lic.streak_ok); setText('licLastStage', lic.last_stage_at ? fmtDate(lic.last_stage_at) : 'aucun');
-    setText('licRulesVersion', lic.rules_version); setText('licPoints', lic.points);
-    setText('licCap', lic.cap); setText('licBond', fmtNear(lic.bond));
-    setText('licMissionsOk', lic.missions_ok); setText('licCategory', lic.category);
-  }
-  function loadConsult(account, category) {
-    return viewCall(cfg.contract, 'status', { account: account, category: category }).then(function (st) {
-      renderStatus(st); renderReports(st.recent_reports); updateHolderFinances(st);
-      return Promise.all([
-        viewCall(cfg.contract, 'license', { token_id: st.token_id }).then(renderLicense).catch(function () {}),
-        loadNft(st.token_id, st.holder)
-      ]);
-    });
-  }
-
-  /* -------------------------------------------------------- Section 2: Check */
-  function numOrNull(val) { var v = parseInt(val, 10); return isNaN(v) ? null : v; }
-  function runCheck() {
-    var req = {
-      min_points: numOrNull($('chkMinPoints').value), min_missions: numOrNull($('chkMinMissions').value),
-      max_invalidations: numOrNull($('chkMaxInval').value), min_age_months: numOrNull($('chkMinAge').value),
-      max_coefficient: numOrNull($('chkMaxCoef').value)
-    };
-    var acc = $('chkAccount').value.trim(), cat = $('chkCategory').value.trim() || cfg.category;
-    if (!cfg.contract || !acc) return;
-    $('checkBtn').disabled = true;
-    viewCall(cfg.contract, 'check', { account: acc, category: cat, requirements: req }).then(function (res) {
-      var badge = $('checkBadge'); badge.textContent = res.allowed ? 'AUTORISÉ (OUI)' : 'REFUSÉ (NON)';
-      badge.className = 'badge ' + (res.allowed ? 'badge-ok' : 'badge-err');
-      setText('chkAllowed', res.allowed ? 'Oui' : 'Non'); setText('chkCode', res.code || 'aucun (succès)');
-      setText('chkPoints', res.points); setText('chkStatus', fr(res.status));
-    }).catch(function (e) { banner('Check : ' + e.message); }).then(function () { $('checkBtn').disabled = false; });
-  }
-
-  /* ---------------------------------------------------------- Section 3: NFT */
-  function loadNft(tokenId, ownerId) {
-    if (!cfg.contract || !tokenId) return Promise.resolve();
-    return Promise.all([
-      viewCall(cfg.contract, 'nft_token', { token_id: tokenId }).then(function (t) {
-        if (!t) return;
-        var m = t.metadata || {};
-        setText('nftTitle', m.title || t.computed_title || '—'); setText('nftTokenId', t.token_id);
-        setText('nftOwner', t.owner_id); setText('nftEdition', m.spec || m.standard || 'nft-1.0.0');
-        setText('nftComputedTitle', t.computed_title || '—');
-        setText('nftExtra', m.extra ? JSON.stringify(JSON.parse(m.extra), null, 2) : '—');
-      }),
-      ownerId ? viewCall(cfg.contract, 'nft_tokens_for_owner', { account_id: ownerId, limit: 10 }).then(function (toks) {
-        var list = toks || []; $('nftOwnerTokensEmpty').hidden = list.length > 0;
-        renderTableRows('nftOwnerTokensBody', list.map(function (t) {
-          return [t.token_id, t.computed_title || (t.metadata && t.metadata.title) || '—', t.owner_id];
-        }));
-      }) : Promise.resolve()
-    ]).catch(function (e) { banner('NFT : ' + e.message); });
-  }
-
-  /* ------------------------------------------------------- Section 4: Holder */
-  function updateHolderFinances(st) {
-    setText('myBond', fmtNear(st.bond)); setText('myBondRequired', fmtNear(st.required_bond));
-    var b = toBigInt(st.bond), req = toBigInt(st.required_bond);
-    setText('myBondExcess', fmtNear(b > req ? (b - req).toString() : '0'));
-    if (cfg.contract && st.holder) {
-      viewCall(cfg.contract, 'credit', { account: st.holder }).then(function (c) { setText('myCredit', fmtNear(c)); }).catch(function () {});
-    }
-    setupHolderActions(st.holder, st.category);
-  }
-  function loadDelegation() {
-    var del = $('delDelegate').value.trim(), cat = $('delCategory').value.trim() || cfg.category;
-    if (!cfg.contract || !del) return;
-    viewCall(cfg.contract, 'delegation', { delegate: del, category: cat }).then(function (d) {
-      if (!d) {
-        setText('delHolder', 'aucune délégation'); setText('delDelegateOut', '—');
-        setText('delCatOut', '—'); setText('delExpires', '—'); return;
-      }
-      setText('delHolder', d.holder); setText('delDelegateOut', d.delegate);
-      setText('delCatOut', d.category); setText('delExpires', fmtDate(d.expires_at) + fmtDuration(d.expires_at));
-    }).catch(function (e) { banner('Délégation : ' + e.message); });
-  }
-
-  /* ----------------------------------------------------- Section 5: Missions */
-  function loadMissions() {
-    if (!cfg.missions) { setText('missionsStatus', 'Contrat missions non configuré'); return; }
-    setText('missionsStatus', 'Chargement...');
-    viewCall(cfg.missions, 'missions', {}).then(function (list) {
-      var ms = list || []; $('missionsEmpty').hidden = ms.length > 0;
-      renderTableRows('missionsBody', ms.map(function (m) {
-        return [m.id, fmtNear(m.reward), fr(m.state), m.worker || '—', fr(m.outcome)];
-      }));
-      setText('missionsStatus', ms.length + ' mission(s)');
-    }).catch(function (e) { setText('missionsStatus', ''); banner('Missions : ' + e.message); });
-  }
-  function loadMissionDetail(id) {
-    if (!cfg.missions || isNaN(id)) return;
-    viewCall(cfg.missions, 'mission', { mission_id: id }).then(function (m) {
-      setText('mViewId', m.id); setText('mViewPoster', m.poster); setText('mViewWorker', m.worker || 'aucun');
-      setText('mViewReward', fmtNear(m.reward)); setText('mViewState', fr(m.state)); setText('mViewOutcome', fr(m.outcome));
-      setText('mViewCreated', fmtDate(m.created_at)); setText('mViewTaken', m.taken_at ? fmtDate(m.taken_at) : '—');
-      setText('mViewClosed', m.closed_at ? fmtDate(m.closed_at) : '—');
-    }).catch(function (e) { banner('Mission ' + id + ' : ' + e.message); });
-  }
-
-  /* ------------------------------------------------------- Section 6: Issuer */
-  function loadIssuerData() {
-    if (!cfg.contract) return;
-    viewCall(cfg.contract, 'issuer', {}).then(function (iss) { setText('govIssuer', iss); }).catch(function () {});
-    viewCall(cfg.contract, 'clock', {}).then(function (clk) { setText('govClock', fmtDate(clk) + ' (' + clk + ' ns)'); }).catch(function () {});
-  }
-  function loadPlatformStatus() {
-    var acc = $('platAccount').value.trim() || cfg.missions;
-    if (!cfg.contract || !acc) return;
-    viewCall(cfg.contract, 'platform', { account: acc }).then(function (p) {
-      setText('platTarget', p.account || acc); setText('platActive', p.active ? 'Oui (active)' : 'Non (révoquée)');
-      setText('platWarnings', (p.warnings || 0) + ' / 3 strikes'); setText('platApproved', p.approved_at ? fmtDate(p.approved_at) : 'non agréée');
-    }).catch(function (e) { banner('Plateforme : ' + e.message); });
-  }
-
-  /* ------------------------------------------------- Section 7 & 8: Rules & Fund */
-  function renderCategoryRules(r) {
-    if (!r) return;
-    var rows = [
-      ['Plafond max (max_points)', r.max_points + ' pts', 'Capital maximum du permis'],
-      ['Points probatoires (probation_points)', r.probation_points + ' pts', 'Capital initial probatoire'],
-      ['Gain probatoire (probation_gain)', '+' + r.probation_gain + ' pts/an', 'Augmentation annuelle du plafond'],
-      ['Perte légère (light_loss)', '-' + r.light_loss + ' pt', 'Retrait pour manquement mineur'],
-      ['Perte moyenne (medium_loss)', '-' + r.medium_loss + ' pts', 'Retrait pour manquement notable'],
-      ['Perte grave (severe_loss)', '-' + r.severe_loss + ' pts', 'Retrait pour incident critique'],
-      ['Régénération (regen_points)', '+' + r.regen_points + ' pt', 'Gain après période propre'],
-      ['Délai régénération', r.regen_after_months + ' mois', 'Mois sans signalement requis'],
-      ['Récupération totale', r.full_regen_after_months + ' mois', 'Délai pour recouvrer 12 points'],
-      ['Stage de sensibilisation', '+' + r.stage_points + ' pts', 'Points récupérés via stage annuel'],
-      ['Série de stage', r.stage_streak + ' missions', 'Missions sans faute pour y prétendre'],
-      ['Suspension à zéro', r.suspension_months + ' mois', 'Période d\'invalidation à 0 point'],
-      ['Indemnité client', fmtNear(r.severe_compensation), 'Indemnité versée sur incident grave'],
-      ['Part du fonds', r.fund_share_pct + ' %', 'Part de la caution versée au fonds'],
-      ['Fenêtre de recours', (r.contest_window_seconds / 86400) + ' jours', 'Délai pour contester un rapport'],
-      ['Dépôt de recours', fmtNear(r.contest_deposit), 'Garantie versée pour recours'],
-      ['Avertissements max plateforme', r.platform_strike_limit + ' strikes', 'Limite avant révocation d\'agrément']
-    ];
-    renderTableRows('rulesBody', rows);
-  }
-  function loadCategoriesAndRules() {
-    if (!cfg.contract) return;
-    viewCall(cfg.contract, 'categories', {}).then(function (cats) {
-      var sel = $('catSelect'), dl = $('categoryList'); clear(sel); clear(dl);
-      (cats || []).forEach(function (c) {
-        var o = document.createElement('option'); o.value = c.id; o.textContent = c.id + ' (base ' + fmtNear(c.base_bond) + ')'; sel.appendChild(o);
-        var o2 = document.createElement('option'); o2.value = c.id; dl.appendChild(o2);
-      });
-      if (cats && cats.length) onCategorySelect(cats[0].id);
-    }).catch(function (e) { banner('Catégories : ' + e.message); });
-  }
-  function onCategorySelect(catId) {
-    if (!cfg.contract || !catId) return;
-    viewCall(cfg.contract, 'rules', { category: catId }).then(renderCategoryRules).catch(function () {});
-  }
-  function loadFund() {
-    if (!cfg.contract) return;
-    viewCall(cfg.contract, 'fund', {}).then(function (f) { setText('fundValue', fmtNear(f)); }).catch(function () {});
-  }
-
-  /* ------------------------------------------------ Actions Binding (Writer) */
-  function bindAction(boxId, spec) {
-    var el = $(boxId); if (!el) return;
-    if (window.DemeritActions && typeof window.DemeritActions.attach === 'function') {
-      window.DemeritActions.attach(el, spec);
-    } else {
-      clear(el);
-      var st = document.createElement('strong'); st.textContent = spec.label || spec.method;
-      var p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Module actions indisponible.';
-      el.appendChild(st); el.appendChild(p);
-    }
-  }
-  function setupHolderActions(holder, category) {
-    var c = cfg.contract, h = holder || 'lea.testnet', cat = category || cfg.category;
-    bindAction('act-topup', { contract: c, method: 'top_up_bond', args: { category: cat }, deposit: '1', signer: h, label: 'top_up_bond (compléter caution)', hint: 'Recharge la caution au niveau requis.' });
-    bindAction('act-withdrawecess', { contract: c, method: 'withdraw_bond_excess', args: { category: cat }, signer: h, label: 'withdraw_bond_excess (retirer excédent)', hint: 'Retire la caution au-delà du montant requis.' });
-    bindAction('act-delegate', { contract: c, method: 'delegate', args: { category: cat, delegate: 'agent1.' + h, expires_at: '1790000000000000000' }, signer: h, label: 'delegate (déléguer permis)', hint: 'Ouvre une délégation pour un sous-compte.' });
-    bindAction('act-revokedelegate', { contract: c, method: 'revoke_delegate', args: { category: cat, delegate: 'agent1.' + h }, signer: h, label: 'revoke_delegate (révoquer délégation)', hint: 'Ferme la délégation active.' });
-    bindAction('act-contest', { contract: c, method: 'contest', args: { category: cat, mission_id: 'm-1' }, deposit: '0.1', signer: h, label: 'contest (ouvrir un recours)', hint: 'Conteste un signalement avec dépôt de garantie.' });
-    bindAction('act-claimstage', { contract: c, method: 'claim_stage', args: { category: cat }, signer: h, label: 'claim_stage (stage de récupération)', hint: 'Récupère +4 points après 5 missions sans signalement.' });
-    bindAction('act-renounce', { contract: c, method: 'renounce', args: { category: cat }, signer: h, label: 'renounce (rendre le permis)', hint: 'Renonce au permis et débloque le solde de caution.' });
-    bindAction('act-withdraw', { contract: c, method: 'withdraw', args: {}, signer: h, label: 'withdraw (retirer crédit)', hint: 'Transfère les crédits d\'indemnisation ou solde.' });
-    bindAction('act-transfer', { contract: c, method: 'nft_transfer', args: { receiver_id: 'dest.testnet', token_id: 'demerit-1' }, deposit: '0.000000000000000000000001', signer: h, label: 'nft_transfer (test transfert)', hint: 'Prouve le refus formel ERR_SOULBOUND.' });
-  }
-  function setupGlobalActions() {
-    var c = cfg.contract, m = cfg.missions, cat = cfg.category;
-    bindAction('act-post', { contract: m, method: 'post', args: { reward: '1000000000000000000000000' }, deposit: '1', label: 'post (publier mission)', hint: 'Publie une tâche avec récompense sous séquestre.' });
-    bindAction('act-accept', { contract: m, method: 'accept', args: { mission_id: 1 }, label: 'accept (accepter mission)', hint: 'Vérifie is_allowed et attribue le travail.' });
-    bindAction('act-close', { contract: m, method: 'close', args: { mission_id: 1, outcome: 'clean' }, label: 'close (clôturer mission)', hint: 'Clôture, paie le worker et enregistre l\'issue.' });
-    bindAction('act-issue', { contract: c, method: 'issue', args: { account: 'lea.testnet', category: cat, identity: 'fp-hex' }, deposit: '1', label: 'issue (délivrer permis)', hint: 'Émet un permis probatoire avec caution.' });
-    bindAction('act-approveplatform', { contract: c, method: 'approve_platform', args: { category: cat, account: m || 'missions.testnet' }, label: 'approve_platform (agréer)', hint: 'Agrée une plateforme partenaire.' });
-    bindAction('act-resolvecontest', { contract: c, method: 'resolve_contest', args: { category: cat, mission_id: 'm-1', upheld: true }, label: 'resolve_contest (arbitrer recours)', hint: 'Maintient ou infirme le signalement.' });
-    bindAction('act-strikeplatform', { contract: c, method: 'strike_platform', args: { account: m || 'missions.testnet' }, label: 'strike_platform (sanctionner)', hint: 'Avertissement officiel à une plateforme.' });
-    bindAction('act-revokelicense', { contract: c, method: 'revoke_license', args: { account: 'lea.testnet', category: cat, reason: 'fraude' }, label: 'revoke_license (révoquer)', hint: 'Révocation définitive pour motif grave.' });
-  }
-
-  /* ------------------------------------------------------------- Initial Boot */
-  function initListeners() {
-    $('lookupForm').addEventListener('submit', function (e) {
-      e.preventDefault(); banner('');
-      var a = $('account').value.trim(), c = $('category').value.trim() || cfg.category;
-      if (!a) { banner('Indiquez un compte NEAR.'); return; }
-      $('submitBtn').disabled = true;
-      loadConsult(a, c).catch(function (err) { banner('Lecture consultation : ' + err.message); }).then(function () { $('submitBtn').disabled = false; });
-    });
-    $('consultRefresh').addEventListener('click', function () { if (lastStatus) loadConsult(lastStatus.holder, lastStatus.category); });
-    $('checkForm').addEventListener('submit', function (e) { e.preventDefault(); runCheck(); });
-    $('delegationForm').addEventListener('submit', function (e) { e.preventDefault(); loadDelegation(); });
-    $('missionDetailForm').addEventListener('submit', function (e) { e.preventDefault(); loadMissionDetail(parseInt($('detailMissionId').value, 10)); });
-    $('platformForm').addEventListener('submit', function (e) { e.preventDefault(); loadPlatformStatus(); });
-    $('catSelect').addEventListener('change', function (e) { onCategorySelect(e.target.value); });
-    $('nftRefresh').addEventListener('click', function () { if (lastStatus) loadNft(lastStatus.token_id, lastStatus.holder); });
-    $('holderRefresh').addEventListener('click', function () { if (lastStatus) loadConsult(lastStatus.holder, lastStatus.category); });
-    $('missionsRefresh').addEventListener('click', loadMissions);
-    $('issuerRefresh').addEventListener('click', function () { loadIssuerData(); loadPlatformStatus(); });
-    $('rulesRefresh').addEventListener('click', loadCategoriesAndRules);
-    $('fundRefresh').addEventListener('click', loadFund);
-  }
-
-  function boot() {
-    if (!cfg.contract) {
-      $('notice').hidden = false;
-      $('notice').textContent = 'Mode hors-ligne / non configuré : le contrat Demerit n\'est pas spécifié dans config.js. Utilisez ?contract=...&missions=...&rpc=... pour connecter un déploiement réel. Toutes les vues restent interactives et le scénario ci-dessous affiche les résultats attendus.';
-    }
-    initListeners();
-    setupHolderActions('lea.testnet', cfg.category);
-    setupGlobalActions();
-    loadCategoriesAndRules();
-    loadMissions();
-    loadFund();
-    loadIssuerData();
-    if (cfg.missions) $('platAccount').value = cfg.missions;
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,a'); if (!t) { $('#acctMenu').hidden = true; return; }
+  if (t.id === 'acctBtn') { $('#acctMenu').hidden = !$('#acctMenu').hidden; return; }
+  $('#acctMenu').hidden = true;
+  if (t.dataset.who) { ui.who = t.dataset.who; ui.banner = null; ui.page = PEOPLE[ui.who].pages[0]; location.hash = '#/' + ui.page; render(); return; }
+  if (t.dataset.page) { e.preventDefault(); ui.page = t.dataset.page; ui.banner = null; location.hash = '#/' + ui.page; render(); return; }
+  if (t.dataset.mode) return setMode(t.dataset.mode);
+  if (t.dataset.accept) return accept(+t.dataset.accept);
+  if (t.dataset.deliver) return deliver(+t.dataset.deliver);
+  if (t.dataset.rate) return rate(+t.dataset.mid, t.dataset.rate);
+  if (t.dataset.intentAccept) return accept(+t.dataset.intentAccept);
+  if (t.dataset.intentPost) return post();
+  if (t.dataset.intentWithdraw) return withdraw();
+  if (t.dataset.intentTopup) return topup();
+  ({ getLic: getLicence, mx: closeModal, verify: verifyId, issue, post, topup, sell, agent, withdraw, ff: fastForward, doCheck }[t.id] || (() => {}))();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'q') doCheck(); });
+const h = location.hash.replace('#/', ''); if (PEOPLE.lea.pages.includes(h)) ui.page = h;
+logLine('m', '# demerit · two Rust contracts: ' + REG + ' (licence registry) and ' + PF + ' (delivery platform)');
+refresh(); render();
+if (isLive()) loadLive();
+window.__demerit = { w, ui };
 })();

@@ -272,7 +272,7 @@ async function run() {
     await page.setViewport({ width: 1440, height: 1600 });
     const query = `contract=${encodeURIComponent(devnet.contract)}&missions=${encodeURIComponent(devnet.missions)}` +
       `&rpc=${encodeURIComponent(devnet.rpc)}&category=${encodeURIComponent(devnet.category || 'coursier')}`;
-    const url = `http://127.0.0.1:${port}/?${query}`;
+    const url = `http://127.0.0.1:${port}/dashboard.html?${query}`;
     console.log(`Opening ${url}`);
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
     await page.waitForSelector('#sec-consult');

@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer-core';
 
 // Public page against the live testnet registry. Override with env vars:
 //   LIVE_URL=... LIVE_ACCOUNT=... LIVE_SUSPENDED=... node scripts/live-check.mjs
-const URL = process.env.LIVE_URL || 'https://near-demerit.vercel.app/';
+const URL = process.env.LIVE_URL || 'https://near-demerit.vercel.app/dashboard.html';
 const ACCOUNT = process.env.LIVE_ACCOUNT || 'lea.demerit.testnet';
 const SUSPENDED = process.env.LIVE_SUSPENDED || 'lea2.demerit.testnet';
 let pass = 0, fail = 0;

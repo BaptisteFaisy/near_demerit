@@ -29,6 +29,7 @@ const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
+  '.woff2': 'font/woff2',
 };
 
 function serve(root) {
@@ -74,8 +75,19 @@ try {
 
   for (const [file, type] of [
     ['/index.html', 'text/html'],
+    ['/app.html', 'text/html'],
     ['/app.js', 'text/javascript'],
-    ['/styles.css', 'text/css'],
+    ['/chain.js', 'text/javascript'],
+    ['/live.js', 'text/javascript'],
+    ['/views.js', 'text/javascript'],
+    ['/moteur.js', 'text/javascript'],
+    ['/common.js', 'text/javascript'],
+    ['/style.css', 'text/css'],
+    ['/fonts.css', 'text/css'],
+    ['/dashboard.html', 'text/html'],
+    ['/dashboard.js', 'text/javascript'],
+    ['/dashboard.css', 'text/css'],
+    ['/vendor/three.module.js', 'text/javascript'],
     ['/config.js', 'text/javascript'],
   ]) {
     const res = await get(port, file);
@@ -84,13 +96,23 @@ try {
     check(`GET ${file} content-type ${type}`, ctype.includes(type), ctype);
   }
 
-  const appSource = await readFile(path.join(ROOT, 'app.js'), 'utf8');
-  check('app.js passes node --check', await checkSyntax(appSource));
+  /* The public page must not depend on a CDN. */
+  const landing = await (await get(port, '/index.html')).text();
+  const app = await (await get(port, '/app.html')).text();
+  check('landing has no CDN reference', !/https?:\/\/(cdn|fonts\.googleapis|unpkg|cdnjs)/.test(landing));
+  check('app has no CDN reference', !/https?:\/\/(cdn|fonts\.googleapis|unpkg|cdnjs)/.test(app));
+  check('three.js is vendored', landing.includes('"./vendor/three.module.js"'));
+
+  for (const file of ['app.js', 'chain.js', 'live.js', 'views.js', 'moteur.js', 'common.js', 'dashboard.js']) {
+    const source = await readFile(path.join(ROOT, file), 'utf8');
+    check(`${file} passes node --check`, await checkSyntax(source));
+  }
 
   const page = await get(port, '/?contract=demo.testnet');
   check('GET /?contract=demo.testnet -> 200', page.status === 200, `status ${page.status}`);
   const html = await page.text();
-  check('page contains the app entrypoint', html.includes('app.js'));
+  check('landing links the app', html.includes('app.html'));
+  check('landing loads the vendored three.js', html.includes('vendor/three.module.js'));
 } finally {
   server.close();
 }
