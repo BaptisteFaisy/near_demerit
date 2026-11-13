@@ -1,0 +1,4 @@
+node_modules/
+raw-*/
+*.fx.wav
+voice-*/

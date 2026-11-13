@@ -1,0 +1,27 @@
+/* Mise en page « vidéo » injectée pendant la capture uniquement (aucun fichier du site modifié).
+   Cadre 1440 × 810 : scène à gauche, permis + temps + rôles + actions à droite, terminal en bas à gauche. */
+html, body { overflow: hidden !important; height: 810px !important; }
+.w > * { display: none !important; }
+.w > header.top, .w > section#top, .w > section#scene, .w > section.grid2, .w > section#term { display: block !important; }
+.w > header.top { position: fixed !important; left: 16px; right: 16px; top: 6px; margin: 0 !important; width: auto !important; max-width: none !important; display: flex !important; flex-wrap: nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 20px !important; z-index: 20; }
+.w > header.top > * { flex: none !important; width: auto !important; }
+/* héros : on ne garde que la carte du permis et l'horloge */
+section#top { position: fixed !important; inset: 0 !important; margin: 0 !important; padding: 0 !important; pointer-events: none; z-index: 15; }
+section#top .hero-l > *:not(.clockbox) { display: none !important; }
+section#top .clockbox { position: fixed !important; left: 905px; top: 402px; margin: 0 !important; pointer-events: auto; transform: scale(.82); transform-origin: 0 0; z-index: 30; }
+section#top .hero-r { position: fixed !important; left: 905px; top: 62px; width: 520px; margin: 0 !important; pointer-events: auto; }
+section#top .hero-r .hud { width: 520px !important; max-width: none !important; }
+/* scène */
+section#scene { position: fixed !important; left: 14px; top: 58px; width: 1288px !important; margin: 0 !important; transform: scale(.68); transform-origin: 0 0; z-index: 5; }
+/* rôles + actions */
+section.grid2 { position: fixed !important; left: 905px; top: 448px; width: 640px !important; margin: 0 !important; transform: scale(.81); transform-origin: 0 0; z-index: 10; display: block !important; }
+section.grid2 > .col:nth-child(2) { display: none !important; }
+section.grid2 > .col:first-child > *:not(#roles):not(#acts):not(#role-hint) { display: none !important; }
+section.grid2 #roles { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 6px !important; }
+section.grid2 #role-hint { display: none !important; }
+section.grid2 #acts { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-top: 10px !important; }
+section.grid2 #acts .act .ah { display: none !important; }
+section.grid2 #acts .act { min-height: 0 !important; padding-top: 12px !important; padding-bottom: 12px !important; }
+/* terminal */
+section#term { position: fixed !important; left: 14px; top: 612px; width: 872px !important; height: 190px; margin: 0 !important; z-index: 12; overflow: hidden; }
+section#term pre#term { max-height: 140px !important; overflow: hidden !important; display: flex; flex-direction: column; justify-content: flex-end; }

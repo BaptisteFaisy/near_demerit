@@ -1,0 +1,388 @@
+{
+ "voice": "hUgFhs9U5VcF4E65CSsv",
+ "who": "Gaia",
+ "out": "demerit-demo-gaia.mp4",
+ "lines": [
+  {
+   "id": "g01",
+   "chapter": "",
+   "text": "Demerit is a points licence for gig workers: a bad job costs points, a deposit repays the client, and a new account erases nothing.",
+   "do": [
+    [
+     0.3,
+     "ring hud"
+    ],
+    [
+     "60%",
+     "ring scene"
+    ]
+   ]
+  },
+  {
+   "id": "g02",
+   "chapter": "",
+   "text": "Today, a bad courier just opens a new account, and the wronged client gets nothing back.",
+   "do": [
+    [
+     0.2,
+     "ring off"
+    ],
+    [
+     0.6,
+     "glide scene"
+    ]
+   ]
+  },
+  {
+   "id": "g03",
+   "chapter": "1 · Licence",
+   "text": "Meet Léa, a courier. The issuer checks her identity off chain: only a salted fingerprint ever reaches NEAR.",
+   "do": [
+    [
+     0.2,
+     "role issuer"
+    ],
+    [
+     1.6,
+     "act kyc"
+    ]
+   ]
+  },
+  {
+   "id": "g04",
+   "chapter": "1 · Licence",
+   "pre": [
+    "act approve_platform"
+   ],
+   "text": "Then it issues her licence: six points on probation, and one NEAR locked as a deposit.",
+   "do": [
+    [
+     0.4,
+     "act issue"
+    ],
+    [
+     "70%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "g05",
+   "chapter": "NEAR · accounts",
+   "text": "On NEAR, the licence is an NFT held by a readable account, lea dot testnet, and any wallet shows today's points.",
+   "do": [
+    [
+     0.2,
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "g06",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "role client"
+   ],
+   "text": "A client posts a delivery with a ten-cent reward, and Léa accepts it.",
+   "do": [
+    [
+     0.3,
+     "act post"
+    ],
+    [
+     "50%",
+     "role pro"
+    ],
+    [
+     "68%",
+     "act accept"
+    ]
+   ]
+  },
+  {
+   "id": "g07",
+   "chapter": "NEAR · contract calls",
+   "text": "Before assigning it, the mission contract asks the registry contract: is Léa allowed? On NEAR that call is cheap enough to run on every single mission.",
+   "do": [
+    [
+     0.3,
+     "ring scene"
+    ],
+    [
+     "60%",
+     "ring term"
+    ]
+   ]
+  },
+  {
+   "id": "g08",
+   "chapter": "2 · Work",
+   "pre": [
+    "ring off",
+    "role client"
+   ],
+   "text": "The job closes clean, and Léa is paid.",
+   "do": [
+    [
+     0.3,
+     "act close_clean"
+    ]
+   ]
+  },
+  {
+   "id": "g09",
+   "chapter": "3 · A fault",
+   "pre": [
+    "act post",
+    "role pro",
+    "act accept",
+    "role client"
+   ],
+   "text": "Next job, the client reports a medium fault: minus three points, on every platform at once.",
+   "do": [
+    [
+     0.4,
+     "act close_medium"
+    ],
+    [
+     "70%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "g10",
+   "chapter": "4 · Time",
+   "pre": [
+    "ring off"
+   ],
+   "text": "Six months pass without a complaint: one point comes back, and nobody sent a transaction.",
+   "do": [
+    [
+     0.3,
+     "time 6"
+    ],
+    [
+     "65%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "g11",
+   "chapter": "NEAR · free reads",
+   "pre": [
+    "ring off",
+    "role registry"
+   ],
+   "text": "Points are recomputed from timestamps whenever someone reads them. On NEAR that read is free: no gas, no account, open to anyone.",
+   "do": [
+    [
+     0.4,
+     "act v_status"
+    ],
+    [
+     "60%",
+     "act v_check"
+    ]
+   ]
+  },
+  {
+   "id": "g12",
+   "chapter": "5 · Serious fault",
+   "pre": [
+    "role client",
+    "act post",
+    "role pro",
+    "act accept",
+    "role client"
+   ],
+   "text": "Then a serious fault: zero points, and the licence is suspended for six months.",
+   "do": [
+    [
+     0.4,
+     "act close_severe"
+    ],
+    [
+     "75%",
+     "ring hud"
+    ]
+   ]
+  },
+  {
+   "id": "g13",
+   "chapter": "5 · Serious fault",
+   "text": "The deposit pays at once: twenty cents to the client, twenty to a shared guarantee fund. The contract moves the money, not a support desk.",
+   "do": [
+    [
+     0.2,
+     "ring hud"
+    ],
+    [
+     "60%",
+     "ring term"
+    ]
+   ]
+  },
+  {
+   "id": "g14",
+   "chapter": "6 · Refused",
+   "pre": [
+    "ring off",
+    "role client",
+    "act post",
+    "role pro"
+   ],
+   "text": "Suspended, Léa tries to take a new job. The registry says no.",
+   "do": [
+    [
+     0.4,
+     "act accept"
+    ]
+   ]
+  },
+  {
+   "id": "g15",
+   "chapter": "7 · New account",
+   "pre": [
+    "role issuer"
+   ],
+   "text": "A fresh account, lea two? Same fingerprint: refused. The record follows the person, not the account.",
+   "do": [
+    [
+     0.4,
+     "act issue2"
+    ]
+   ]
+  },
+  {
+   "id": "g16",
+   "chapter": "8 · Comeback",
+   "text": "Six months later she is back with six points, but after a serious fault the required deposit is twenty-five percent higher.",
+   "do": [
+    [
+     0.3,
+     "time 6"
+    ],
+    [
+     "55%",
+     "ring hud"
+    ]
+   ],
+   "pre": [
+    "role pro"
+   ]
+  },
+  {
+   "id": "g17",
+   "chapter": "8 · Comeback",
+   "pre": [
+    "ring off",
+    "role pro"
+   ],
+   "text": "Her job is refused until she tops up sixty-five cents. Then it is accepted.",
+   "do": [
+    [
+     0.3,
+     "act accept"
+    ],
+    [
+     "45%",
+     "act topup"
+    ],
+    [
+     "75%",
+     "act accept"
+    ]
+   ]
+  },
+  {
+   "id": "g18",
+   "chapter": "9 · Not for sale",
+   "text": "Can she sell her licence? No. The transfer is refused: this NFT is soulbound.",
+   "do": [
+    [
+     0.5,
+     "act transfer"
+    ]
+   ],
+   "pre": [
+    "role pro"
+   ]
+  },
+  {
+   "id": "g19",
+   "chapter": "NEAR · sub-accounts",
+   "text": "NEAR sub-accounts let her run an AI agent under her licence, with a key limited to taking jobs, and she answers for it.",
+   "do": [
+    [
+     0.4,
+     "act delegate"
+    ],
+    [
+     "60%",
+     "ring term"
+    ]
+   ],
+   "pre": [
+    "role pro"
+   ]
+  },
+  {
+   "id": "g20",
+   "chapter": "10 · Paid back",
+   "pre": [
+    "ring off",
+    "role client"
+   ],
+   "text": "The client withdraws the compensation, and every NEAR is accounted for.",
+   "do": [
+    [
+     0.3,
+     "act withdraw"
+    ],
+    [
+     "65%",
+     "ring invariant"
+    ]
+   ]
+  },
+  {
+   "id": "g21",
+   "chapter": "Live on testnet",
+   "scene": "site",
+   "text": "And it is live: the public page reads Léa's real licence on NEAR testnet, with no wallet and no key.",
+   "do": [
+    [
+     0.3,
+     "ring consult"
+    ]
+   ],
+   "pre": [
+    "type #account lea.demerit.testnet",
+    "click #submitBtn",
+    "waitdata"
+   ]
+  },
+  {
+   "id": "g22",
+   "chapter": "Proof",
+   "scene": "site",
+   "text": "Two Rust contracts, eighteen tests, and seven cheating attempts, all refused.",
+   "do": [
+    [
+     0.2,
+     "ring consult"
+    ]
+   ]
+  },
+  {
+   "id": "g23",
+   "chapter": "",
+   "scene": "end",
+   "text": "Demerit: reputation you can lose, not sell. Which job would you license first?",
+   "do": []
+  }
+ ]
+}

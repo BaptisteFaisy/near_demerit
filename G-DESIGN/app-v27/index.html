@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>demerit — the points licence for gig workers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f5f2;--ink:#111;--mut:#6b6b66;--line:#d9d9d3;--accent:#3a2bff;--hatch:repeating-linear-gradient(-45deg,#cfcfc8 0 1px,transparent 1px 7px)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 'JetBrains Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+.frame{max-width:1360px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line);position:relative}
+nav{display:flex;align-items:center;gap:28px;height:64px;padding:0 32px;border-bottom:1px solid var(--line);max-width:1360px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.brand svg{width:30px;height:30px}
+nav a.l{color:var(--mut);text-decoration:none;font-size:13px}
+nav .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 18px;border:1px solid var(--ink);font:500 13px 'JetBrains Mono';color:var(--ink);background:transparent;text-decoration:none}
+.btn.k{background:var(--ink);color:#fff}
+.hatch{height:22px;background:var(--hatch);border-bottom:1px solid var(--line)}
+.corner{position:absolute;width:7px;height:7px;background:var(--ink)}
+.hero{display:grid;grid-template-columns:1fr 1.05fr;min-height:560px;border-bottom:1px solid var(--line)}
+.copy{padding:56px 40px 40px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.tag{font-size:12px;color:var(--mut);display:flex;gap:10px;align-items:center}
+.tag i{width:8px;height:8px;background:var(--accent);display:inline-block}
+h1{font-size:58px;line-height:1.02;letter-spacing:-.045em;font-weight:500;margin:22px 0 20px}
+h1 b{font-weight:800}
+h1 u{text-decoration:none;background:linear-gradient(transparent 62%,#d9d5ff 62%)}
+.lead{font-size:16px;max-width:470px;color:#333}
+.ctas{display:flex;gap:12px;margin-top:30px}
+.who{margin-top:auto;padding-top:34px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line)}
+.who div{padding:14px 10px 0 0}
+.who b{display:block;font-size:13px}
+.who span{font-size:11px;color:var(--mut)}
+.who i{display:block;width:22px;height:22px;border:1px solid var(--ink);margin-bottom:10px;position:relative}
+.who i:after{content:'';position:absolute;inset:5px;background:var(--ink)}
+.who div:first-child i:after{background:var(--accent)}
+.stage{display:grid;grid-template-rows:1fr 244px}
+#gl{width:100%;height:100%;display:block}
+.vis{position:relative;border-bottom:1px solid var(--line)}
+.legend{position:absolute;left:24px;top:20px;font-size:12px;color:var(--mut)}
+.legend b{color:var(--ink)}
+.labels{position:absolute;inset:0;pointer-events:none}.lb{position:absolute;transform:translate(-50%,-50%);font-size:11px;line-height:1.25;text-align:center;background:var(--bg);padding:2px 6px;border:1px solid var(--line);white-space:nowrap}.lb b{display:block;font-size:12px}.lb.me{border-color:var(--accent)}.lb.me b{color:var(--accent)}.lb.off{opacity:0}.lb.no{border-color:#d33;color:#d33}.cap{position:absolute;left:24px;bottom:16px;font-size:12px;padding:4px 10px;background:var(--ink);color:#fff}.cap.no{background:#d33}
+.pts{position:absolute;right:24px;top:18px;text-align:right}
+.pts b{font-size:64px;font-weight:800;letter-spacing:-.05em;line-height:1}
+.pts span{display:block;font-size:12px;color:var(--mut)}
+.term{background:#0d0d0d;color:#e8e8e8;padding:0;display:flex;flex-direction:column}
+.term header{display:flex;gap:12px;align-items:center;height:36px;padding:0 16px;border-bottom:1px solid #262626;font-size:12px;color:#9a9a9a}
+.term header .d{display:flex;gap:6px}.term header .d i{width:9px;height:9px;border:1px solid #555}
+.term header .live{margin-left:auto;color:#c9c3ff}
+.term ol{list-style:none;padding:12px 16px;font-size:12.5px;line-height:1.75;overflow:hidden;flex:1}
+.term li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.term .m{color:#7a7a7a}.term .c{color:#fff}.term .e{color:#a99fff}.term .x{color:#8a8a8a;padding-left:12px}.term .o{color:#8fe3a6}.term .r{color:#ff8a7a}
+.steps{display:grid;grid-template-columns:repeat(4,1fr)}
+.steps div{padding:30px 28px 40px;border-right:1px solid var(--line)}
+.steps div:last-child{border:0}
+.steps em{font-style:normal;color:var(--accent);font-size:12px}
+.steps h3{font-size:20px;letter-spacing:-.02em;margin:10px 0 8px}
+.steps p{color:var(--mut);font-size:13px}
+.dark{background:#0d0d0d;color:#fff;padding:70px 40px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.dark h2{font-size:40px;letter-spacing:-.04em;font-weight:500;line-height:1.08}
+.dark p{color:#aaa;max-width:520px}
+</style>
+</head>
+<body>
+<nav><a class="brand" href="index.html"><span id="mk"></span>demerit</a><a class="l" href="#">How it works</a><a class="l" href="#">For platforms</a><a class="l" href="app.html#/check">Live check</a><span class="sp"></span><span class="tag"><i></i>NEAR testnet · live</span><a class="btn k" href="app.html">Open the app</a></nav>
+<div class="frame">
+  <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span>
+  <div class="hatch"></div>
+  <section class="hero">
+    <div class="copy">
+      <span class="tag"><i></i>The points licence for gig workers</span>
+      <h1>Reputation you can <b><u>lose</u></b>,<br>not <b>sell.</b></h1>
+      <p class="lead">Stars reset when a bad courier opens a new account. A demerit licence doesn't: one soulbound NFT on NEAR, checked by every platform, backed by a deposit that repays the client.</p>
+      <div class="ctas"><a class="btn k" href="app.html">Get my licence →</a><a class="btn" href="app.html#/check">Check a licence</a></div>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="stage">
+      <div class="vis"><canvas id="gl"></canvas>
+        <div class="legend"><b>ledger.demerit.testnet</b> · the registry<br>12 cubes = Léa's points · lines = calls</div><div class="labels" id="labels"></div><div class="cap" id="cap">Licence issued · 6 points on probation</div>
+        <div class="pts"><b id="pv">6</b><span>/ 12 points · probation</span></div>
+      </div>
+      <div class="term"><header><span class="d"><i></i><i></i><i></i></span>near-cli · on-chain activity<span class="live">● ledger.demerit.testnet</span></header><ol id="log"></ol></div>
+    </div>
+  </section>
+  <section class="steps" id="steps"></section>
+  <div class="hatch" style="border-top:1px solid var(--line)"></div>
+  <section class="dark"><h2>One licence.<br>Every platform.<br>No fresh start.</h2><p>Platforms call <b style="color:#fff">ledger.demerit.testnet.is_allowed()</b> before assigning a job. Points are recomputed from timestamps at read time, so reading is free. A serious fault moves money from the courier's deposit to the client, in the same transaction.</p></section>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { MARK, PARTIES, STEPS, terminal } from './common.js';
+document.getElementById('mk').outerHTML = MARK.replace('<svg', '<svg width="30" height="30"');
+document.getElementById('who').innerHTML = PARTIES.map(p => `<div><i></i><b>${p.name}</b><span>${p.role}</span></div>`).join('');
+document.getElementById('steps').innerHTML = STEPS.map(s => `<div><em>${s[0]}</em><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join('');
+// The registry and its five parties, wired. Every terminal line drives the scene, so the 3D shows what the log says.
+const cv = document.getElementById('gl'), box = cv.parentElement;
+const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+r.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, .1, 100);
+const INK = 0x111111, ACC = 0x3a2bff, RED = 0xdd3333, GREY = 0xb5b5ad;
+const edges = (geo, color = INK, op = 1) => new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color, transparent: true, opacity: op }));
+// registry slab + 12 point cubes
+const reg = new THREE.Group(); scene.add(reg);
+const slab = edges(new THREE.BoxGeometry(3.4, .5, 2.6)); slab.position.y = .25; reg.add(slab);
+const cubes = [];
+for (let i = 0; i < 12; i++) {
+  const g = new THREE.Group(), x = -1.2 + (i % 4) * .8, z = -.65 + Math.floor(i / 4) * .65;
+  const fill = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), new THREE.MeshBasicMaterial({ color: ACC, transparent: true, opacity: 0 }));
+  const w = edges(new THREE.BoxGeometry(.5, .5, .5), INK, .9);
+  g.add(fill, w); g.position.set(x, .78, z); reg.add(g);
+  cubes.push({ g, fill, w, on: 0, target: 0 });
+}
+// parties
+const P = {
+  lea: { pos: [-4.4, 0, 1.4], geo: new THREE.CylinderGeometry(.42, .42, 1.3, 20, 1), name: 'Léa · courier', id: 'lea.demerit.testnet', me: 1 },
+  sam: { pos: [4.2, 0, 2.2], geo: new THREE.BoxGeometry(.9, .9, .9), name: 'Sam · customer', id: 'client.demerit.testnet' },
+  plat: { pos: [4.0, 0, -2.4], geo: new THREE.BoxGeometry(1.6, 1.5, 1.1), name: 'Platform · any gig app', id: 'platform.demerit.testnet' },
+  fund: { pos: [-3.8, 0, -2.8], geo: new THREE.CylinderGeometry(.55, .55, .7, 6, 1), name: 'Guarantee fund', id: 'held by the registry' },
+  lea2: { pos: [-4.9, 0, 4.2], geo: new THREE.CylinderGeometry(.42, .42, 1.3, 20, 1), name: 'lea2 · new account', id: 'same fingerprint' },
+};
+const labels = document.getElementById('labels');
+for (const [k, p] of Object.entries(P)) {
+  const h = p.geo.parameters.height || .9;
+  p.obj = edges(p.geo, p.me ? ACC : INK); p.obj.position.set(p.pos[0], h / 2, p.pos[2]); scene.add(p.obj);
+  p.top = new THREE.Vector3(p.pos[0], h + .55, p.pos[2]);
+  const pts = [new THREE.Vector3(p.pos[0], .02, p.pos[2]), new THREE.Vector3(0, .02, 0)];
+  p.line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: INK, dashSize: .12, gapSize: .1, transparent: true, opacity: .45 }));
+  p.line.computeLineDistances(); scene.add(p.line);
+  p.el = document.createElement('div'); p.el.className = 'lb' + (p.me ? ' me' : ''); p.el.innerHTML = `<b>${p.name}</b>${p.id}`; labels.appendChild(p.el);
+}
+const regLabel = document.createElement('div'); regLabel.className = 'lb'; regLabel.innerHTML = '<b>Registry</b>ledger.demerit.testnet'; labels.appendChild(regLabel);
+const show = (k, on) => { P[k].obj.visible = P[k].line.visible = on; P[k].el.classList.toggle('off', !on); };
+show('lea2', false);
+// pulses travel along the floor between two parties (or the registry)
+const pulses = [];
+const at = k => k === 'reg' ? new THREE.Vector3(0, .5, 0) : new THREE.Vector3(P[k].pos[0], .5, P[k].pos[2]);
+function pulse(a, b, { color = ACC, stop = 1, delay = 0 } = {}) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .22), new THREE.MeshBasicMaterial({ color })); m.visible = false; scene.add(m);
+  pulses.push({ m, a: at(a), b: at(b), t: -delay, stop });
+}
+const pv = document.getElementById('pv'), cap = document.getElementById('cap');
+const setPts = n => { cubes.forEach((c, i) => c.target = i < n ? 1 : 0); pv.textContent = n; };
+const say = (t, no) => { cap.textContent = t; cap.classList.toggle('no', !!no); };
+const ON = {
+  issue: () => { pulse('lea', 'reg'); say('Léa locks 1 Ⓝ as a deposit'); },
+  issued: () => { setPts(6); P.lea.el.classList.remove('no'); say('Licence issued · 6 points on probation'); },
+  accept: () => { pulse('lea', 'plat'); say('Léa accepts a job on a platform'); },
+  ask: () => { pulse('plat', 'reg'); pulse('reg', 'plat', { delay: .9 }); say('The platform asks the registry: is Léa allowed?'); },
+  allowed: () => say('Allowed · job assigned'),
+  severe: () => { pulse('sam', 'plat'); say('Sam reports a lost parcel'); },
+  drop: () => { setPts(0); P.lea.el.classList.add('no'); say('0 points · licence suspended for 6 months', 1); },
+  refund: () => { pulse('reg', 'sam'); pulse('fund', 'sam', { delay: .35 }); say('Sam is refunded from the deposit and the fund'); },
+  lea2: () => { show('lea2', true); P.lea2.el.classList.remove('no'); pulse('lea2', 'reg', { stop: .62, color: RED }); say('Léa opens a fresh account'); },
+  refused: () => { P.lea2.el.classList.add('no'); say('Refused · same fingerprint, same record', 1); },
+  read: () => { pulse('reg', 'plat', { color: INK }); say('Anyone reads the licence · free, no gas'); },
+  restored: () => { setPts(6); show('lea2', false); P.lea.el.classList.remove('no'); say('6 months later · back on probation, deposit +25 %'); },
+  idle: () => {},
+};
+terminal(document.getElementById('log'), { max: 9, onLine: ev => (ON[ev] || ON.idle)() });
+
+const resize = () => { const w = box.clientWidth, h = box.clientHeight; r.setSize(w, h, false); cam.aspect = w / h;
+  cam.setViewOffset(w, h, 0, -h * .03, w, h); cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+const v = new THREE.Vector3(); let last = performance.now();
+const place = (el, p) => { v.copy(p).project(cam); el.style.left = ((v.x + 1) / 2 * box.clientWidth) + 'px'; el.style.top = ((1 - v.y) / 2 * box.clientHeight) + 'px'; };
+(function loop(now) {
+  now = now || performance.now();
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  const a = .62 + Math.sin(t * .12) * .1;
+  cam.position.set(Math.sin(a) * 12.2, 8.4, Math.cos(a) * 12.2); cam.lookAt(0, .3, .2);
+  cubes.forEach((c, i) => { c.on += (c.target - c.on) * Math.min(1, dt * (c.target ? 6 : 3.5) * (1 + i * .04));
+    c.fill.material.opacity = c.on * .85; c.w.material.color.setHex(c.on > .5 ? INK : GREY);
+    c.g.position.y = .78 - (1 - c.on) * .24; const s = .7 + .3 * c.on; c.g.scale.set(s, s, s); });
+  for (let i = pulses.length - 1; i >= 0; i--) { const p = pulses[i]; p.t += dt / .9;
+    if (p.t >= 0) { p.m.visible = true; const u = Math.min(p.t, p.stop); p.m.position.lerpVectors(p.a, p.b, u); p.m.rotation.y = t * 3; }
+    if (p.t > p.stop + .35) { scene.remove(p.m); pulses.splice(i, 1); } }
+  r.render(scene, cam);
+  for (const p of Object.values(P)) place(p.el, p.top);
+  place(regLabel, new THREE.Vector3(0, -.15, 1.9));
+  requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>
