@@ -6,22 +6,32 @@ NEAR Hackathon 2026 — Ticket 10 "NFTs That Do Something" (Deadline: Nov 14, 20
 
 ## Live on testnet
 
-- **Public page**: https://near-demerit.vercel.app — read-only dashboard over the registry
-  (status, access check, NFT view, holder panel, mission board, issuer console, scale,
-  guarantee fund, and the 9-step scenario). Every write action produces a `near-cli-rs`
-  command to copy or a MyNearWallet signing link; the page never holds a key.
+- **Public page**: https://near-demerit.vercel.app — the product front page: the promise in one
+  line, the registry drawn in 3D, a terminal that types the calls, and the real licence of
+  `lea.demerit.testnet` read live from the chain.
+- **The app**: https://near-demerit.vercel.app/app.html — licence, jobs, orders, wallet and a
+  public check. A **Demo / Live testnet** switch: *Demo* replays the contract rules in the browser
+  (`moteur.js` is a 1:1 port of the Rust contracts), *Live* reads the deployed contracts over
+  public JSON-RPC and shows the real numbers. The page never holds a key: every write action
+  prints the exact `near-cli-rs` command and offers a MyNearWallet signing link.
+- **Deep dashboard**: https://near-demerit.vercel.app/dashboard.html — the nine-section read-only
+  view over the registry (consultation, access check, NFT view, holder panel, mission board,
+  issuer console, scale, guarantee fund, and the 9-step scenario).
+- **Demo video**: `G-DESIGN/video/demerit-demo.mp4` (2:17, English, narrated).
 - **Registry contract**: `ledger.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/ledger.demerit.testnet))
 - **Demo platform contract**: `platform.demerit.testnet` ([Explorer](https://explorer.testnet.near.org/accounts/platform.demerit.testnet))
 - **Root / Demo accounts**: `demerit.testnet`, `issuer.demerit.testnet`, `lea.demerit.testnet`, `lea2.demerit.testnet`, `client.demerit.testnet`, `agent1.lea.demerit.testnet`
-- **Seeded state** (live now): `lea` — 6/6 points, probation, coefficient 1.25, one invalidation,
-  3 flagged missions, a won appeal, bond topped above the requirement; `lea2` — 0 points,
-  suspended, under-bonded; guarantee fund 0.02 NEAR; client credit 0.04 NEAR; 5 missions
-  (`clean`, `light`, `medium`, `severe`, `severe`); a 30-day delegation to `agent1.lea`.
+- **Seeded state** (live now, read on 13 Nov 2026): `lea` — 12/12 points, active, coefficient 1.25,
+  one invalidation, deposit 0.17 / 0.125 NEAR, four recorded missions (`on time`, `late`,
+  `damaged`, `lost parcel`); `lea2` — the same fingerprint got its own licence after the
+  suspension expired (6/12 points, one invalidation, deposit 0.6 NEAR, one `lost parcel`);
+  guarantee fund 0.2 NEAR; client credit 0.4 NEAR; 5 closed missions on the platform.
 - **Replay deployment & seed**: `make testnet` (idempotent: creates the accounts, deploys both
   contracts, creates the `coursier` category with 600 s simulated months, issues two licences,
   seeds five missions, a delegation and a won appeal, then writes `web/config.js`).
-- **Check the public page against the live chain**: `make web-live-smoke` → `LIVE OK (15/15)`
-  (headless Chrome on https://near-demerit.vercel.app, asserting real chain data per section).
+- **Check the public pages against the live chain**: `make web-live-smoke` → `LIVE OK (15/15)`
+  (headless Chrome on https://near-demerit.vercel.app/dashboard.html, asserting real chain data per
+  section); `make web-v28` → `V28 CHECK OK` (landing, app in demo and live mode, dashboard).
 
 ## What it does
 
@@ -84,7 +94,14 @@ near-demerit/
 │   └── missions/     # Demo platform: posts gigs, checks is_allowed, records outcomes
 ├── demo/             # Sandbox runner (demo 9 steps, attack suite, 5-agent sim)
 ├── docs/             # ABI, specifications, architectural decisions, threat model
-└── web/              # Dependency-free static dashboard (HTML/CSS/JS)
+└── web/              # Dependency-free static site (no CDN, no build step)
+    ├── index.html    #   landing: promise, 3D registry, terminal, live licence strip
+    ├── app.html      #   the app: licence, jobs, orders, wallet, public check (demo / live)
+    ├── dashboard.html#   the nine-section read-only view over the registry
+    ├── chain.js      #   shared JSON-RPC layer (view calls, yocto → NEAR)
+    ├── live.js       #   live testnet reads (status, missions, credit, fund)
+    ├── moteur.js     #   1:1 port of the Rust rules, for the browser demo
+    └── vendor/       #   three.js, vendored — the site never calls a CDN
 ```
 
 ## What is On-Chain / What is Off-Chain

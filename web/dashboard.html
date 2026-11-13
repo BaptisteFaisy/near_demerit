@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demerit — registre de permis à points sur NEAR</title>
+<meta name="description" content="Consultation publique et tableau de bord du registre Demerit : permis professionnel à points, soulbound, déployé sur NEAR.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314213d'/%3E%3Cpath d='M7 21h18' stroke='%23fca311' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M11 11h10' stroke='%23e5e5e5' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+<header class="top">
+  <div class="wrap">
+    <h1>Demerit</h1>
+    <p class="sub">Registre public de permis professionnel à points sur NEAR. Données lues en direct sur la chaîne.</p>
+    <nav class="nav" aria-label="Sections">
+      <a href="#sec-consult">1. Consultation</a>
+      <a href="#sec-check">2. Contrôle</a>
+      <a href="#sec-nft">3. Permis NFT</a>
+      <a href="#sec-holder">4. Mon permis</a>
+      <a href="#sec-missions">5. Missions</a>
+      <a href="#sec-issuer">6. Émetteur</a>
+      <a href="#sec-rules">7. Barème</a>
+      <a href="#sec-fund">8. Fonds</a>
+      <a href="#sec-scenario">9. Scénario</a>
+    </nav>
+  </div>
+</header>
+<div class="wrap">
+  <div id="banner" class="banner" role="alert" hidden></div>
+  <div id="notice" class="notice" hidden></div>
+  <main id="main">
+    <!-- 1. Consultation publique -->
+    <section id="sec-consult" aria-labelledby="h-consult">
+      <div class="sec-head"><h2 id="h-consult">1. Consultation publique</h2><button id="consultRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <form id="lookupForm" class="card form">
+        <div class="row">
+          <div class="field"><label for="account">Compte NEAR</label><input id="account" name="account" type="text" autocomplete="off" placeholder="lea.testnet" spellcheck="false" required></div>
+          <div class="field"><label for="category">Catégorie</label><input id="category" name="category" type="text" list="categoryList" placeholder="coursier" autocomplete="off" spellcheck="false"><datalist id="categoryList"></datalist></div>
+          <div class="field field-action"><button id="submitBtn" type="submit">Consulter</button></div>
+        </div>
+        <p class="hint">Lecture publique gratuite via JSON-RPC. Aucun portefeuille requis.</p>
+      </form>
+      <div id="result" class="card-grid" hidden>
+        <div class="card">
+          <h3>Statut du permis (vue <code>status</code>)</h3>
+          <div class="badge-row"><span class="badge" id="statusBadge">—</span><span class="badge badge-warn" id="underBondedBadge" hidden>Sous-garanti</span></div>
+          <div class="gauge" role="img" aria-label="Jauge de points"><div class="gauge-fill" id="pointsBar" style="width:0%"></div></div>
+          <p class="gauge-text" id="pointsText">—</p>
+          <dl class="kv">
+            <dt>Titulaire</dt><dd id="holder">—</dd><dt>Jeton (token_id)</dt><dd id="tokenId">—</dd>
+            <dt>Identité</dt><dd id="identity">—</dd><dt>Plafond</dt><dd id="cap">—</dd>
+            <dt>Statut</dt><dd id="statusLabel">—</dd><dt>Coefficient</dt><dd id="coef">—</dd>
+            <dt>Caution versée</dt><dd id="bond">—</dd><dt>Caution exigée</dt><dd id="bondRequired">—</dd>
+            <dt>Invalidations</dt><dd id="invalidations">—</dd><dt>Missions réussies / signalées</dt><dd id="missionsRatio">—</dd>
+            <dt>Suspension jusqu'au</dt><dd id="suspendedUntil">—</dd><dt>Prochaine régénération</dt><dd id="nextRegen">—</dd>
+            <dt>Prochain gain de plafond</dt><dd id="nextCapGain">—</dd><dt>Motifs de refus</dt><dd id="reasons">—</dd>
+          </dl>
+        </div>
+        <div class="card">
+          <h3>Fiche d'enregistrement (vue <code>license</code>)</h3>
+          <dl class="kv">
+            <dt>Délivré le (ancienneté)</dt><dd id="licIssuedAt">—</dd><dt>Dernier signalement</dt><dd id="licLastReport">—</dd>
+            <dt>Dernière invalidation</dt><dd id="licLastInval">—</dd><dt>Série (streak_ok)</dt><dd id="licStreak">—</dd>
+            <dt>Dernier stage</dt><dd id="licLastStage">—</dd><dt>Version de barème</dt><dd id="licRulesVersion">—</dd>
+            <dt>Points enregistrés</dt><dd id="licPoints">—</dd><dt>Plafond enregistré</dt><dd id="licCap">—</dd>
+            <dt>Caution enregistrée</dt><dd id="licBond">—</dd><dt>Missions sans signalement</dt><dd id="licMissionsOk">—</dd>
+            <dt>Catégorie</dt><dd id="licCategory">—</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card" id="reportsCard">
+        <h3>20 derniers signalements</h3>
+        <table>
+          <caption class="sr-only">20 derniers signalements enregistrés sur le permis</caption>
+          <thead><tr><th scope="col">Mission</th><th scope="col">Classe</th><th scope="col">Date</th><th scope="col">État</th><th scope="col">Points perdus</th><th scope="col">Prélevé</th></tr></thead>
+          <tbody id="reportsBody"></tbody>
+        </table>
+        <p class="muted" id="reportsEmpty">Aucun signalement à afficher.</p>
+      </div>
+    </section>
+
+    <!-- 2. Contrôle d'accès (check) -->
+    <section id="sec-check" aria-labelledby="h-check">
+      <div class="sec-head"><h2 id="h-check">2. Contrôle d'accès (<code>check</code>)</h2></div>
+      <form id="checkForm" class="card form">
+        <p class="hint">Simule la vérification qu'un contrat tiers ou une plateforme appelle avant d'attribuer une mission.</p>
+        <div class="row">
+          <div class="field"><label for="chkAccount">Compte ou délégué</label><input id="chkAccount" type="text" placeholder="lea.testnet" required></div>
+          <div class="field"><label for="chkCategory">Catégorie</label><input id="chkCategory" type="text" placeholder="coursier" value="coursier" required></div>
+          <div class="field"><label for="chkMinPoints">Points min.</label><input id="chkMinPoints" type="number" min="0" max="12" value="9"></div>
+          <div class="field"><label for="chkMinMissions">Missions min.</label><input id="chkMinMissions" type="number" min="0" value="5"></div>
+          <div class="field"><label for="chkMaxInval">Invalidations max.</label><input id="chkMaxInval" type="number" min="0" value="0"></div>
+          <div class="field"><label for="chkMinAge">Ancienneté min. (mois)</label><input id="chkMinAge" type="number" min="0" value="0"></div>
+          <div class="field"><label for="chkMaxCoef">Coefficient max.</label><input id="chkMaxCoef" type="number" min="100" value="150"></div>
+          <div class="field field-action"><button id="checkBtn" type="submit">Vérifier</button></div>
+        </div>
+      </form>
+      <div class="card" id="checkVerdictCard">
+        <h3>Verdict de contrôle</h3>
+        <p class="badge" id="checkBadge">En attente de vérification</p>
+        <dl class="kv">
+          <dt>Autorisé (<code>allowed</code>)</dt><dd id="chkAllowed">—</dd>
+          <dt>Code de refus (<code>code</code>)</dt><dd><code id="chkCode">—</code></dd>
+          <dt>Points effectifs</dt><dd id="chkPoints">—</dd>
+          <dt>Statut calculé</dt><dd id="chkStatus">—</dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 3. Permis en un coup d'œil (NFT) -->
+    <section id="sec-nft" aria-labelledby="h-nft">
+      <div class="sec-head"><h2 id="h-nft">3. Permis en un coup d'œil (NFT NEP-171 / NEP-181)</h2><button id="nftRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <p class="nft-title" id="nftTitle">—</p>
+        <p class="muted">Le contrat calcule son titre et son état à chaque lecture : le portefeuille affiche le statut du jour sans transaction.</p>
+        <dl class="kv">
+          <dt>Identifiant de jeton</dt><dd id="nftTokenId">—</dd>
+          <dt>Propriétaire actuel</dt><dd id="nftOwner">—</dd>
+          <dt>Édition / Spécification</dt><dd id="nftEdition">—</dd>
+          <dt>Titre dynamique calculé</dt><dd id="nftComputedTitle">—</dd>
+          <dt>Attributs JSON (<code>extra</code>)</dt><dd><pre class="code-pre" id="nftExtra">—</pre></dd>
+        </dl>
+        <h4 class="subhead">Permis du titulaire (<code>nft_tokens_for_owner</code>)</h4>
+        <table>
+          <caption class="sr-only">Liste des jetons NFT détenus</caption>
+          <thead><tr><th scope="col">Jeton</th><th scope="col">Titre calculé</th><th scope="col">Propriétaire</th></tr></thead>
+          <tbody id="nftOwnerTokensBody"></tbody>
+        </table>
+        <p class="muted" id="nftOwnerTokensEmpty">Aucun jeton pour ce compte.</p>
+      </div>
+    </section>
+
+    <!-- 4. Mon permis (actions titulaire) -->
+    <section id="sec-holder" aria-labelledby="h-holder">
+      <div class="sec-head"><h2 id="h-holder">4. Mon permis (actions titulaire)</h2><button id="holderRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <h3>Situation financière du titulaire</h3>
+        <dl class="kv">
+          <dt>Caution versée</dt><dd id="myBond">—</dd><dt>Caution exigée</dt><dd id="myBondRequired">—</dd>
+          <dt>Excédent de caution retirable</dt><dd id="myBondExcess">—</dd><dt>Crédit en attente</dt><dd id="myCredit">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Délégation active (vue <code>delegation</code>)</h3>
+        <form id="delegationForm" class="row row-tight">
+          <div class="field"><label for="delDelegate">Compte du délégué</label><input id="delDelegate" type="text" placeholder="agent1.lea.testnet"></div>
+          <div class="field"><label for="delCategory">Catégorie</label><input id="delCategory" type="text" placeholder="coursier" value="coursier"></div>
+          <div class="field field-action"><button type="submit" class="btn-sm">Consulter</button></div>
+        </form>
+        <dl class="kv" style="margin-top:.6rem;">
+          <dt>Titulaire</dt><dd id="delHolder">—</dd><dt>Délégué</dt><dd id="delDelegateOut">—</dd>
+          <dt>Catégorie</dt><dd id="delCatOut">—</dd><dt>Échéance</dt><dd id="delExpires">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Actions du titulaire</h3>
+        <div class="action-grid">
+          <div class="action-box" id="act-topup"></div><div class="action-box" id="act-withdrawecess"></div>
+          <div class="action-box" id="act-delegate"></div><div class="action-box" id="act-revokedelegate"></div>
+          <div class="action-box" id="act-contest"></div><div class="action-box" id="act-claimstage"></div>
+          <div class="action-box" id="act-renounce"></div><div class="action-box" id="act-withdraw"></div>
+          <div class="action-box" id="act-transfer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Tableau des missions -->
+    <section id="sec-missions" aria-labelledby="h-missions">
+      <div class="sec-head"><h2 id="h-missions">5. Tableau des missions</h2><button id="missionsRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <span class="muted" id="missionsStatus"></span>
+        <table>
+          <caption class="sr-only">Missions publiées sur la plateforme</caption>
+          <thead><tr><th scope="col">Id</th><th scope="col">Récompense</th><th scope="col">État</th><th scope="col">Prestataire</th><th scope="col">Issue</th></tr></thead>
+          <tbody id="missionsBody"></tbody>
+        </table>
+        <p class="muted" id="missionsEmpty">Aucune mission publiée.</p>
+      </div>
+      <div class="card">
+        <h3>Détail d'une mission (vue <code>mission</code>)</h3>
+        <form id="missionDetailForm" class="row row-tight">
+          <div class="field"><label for="detailMissionId">Numéro de mission (id)</label><input id="detailMissionId" type="number" min="0" placeholder="0"></div>
+          <div class="field field-action"><button type="submit" class="btn-sm">Afficher</button></div>
+        </form>
+        <dl class="kv" style="margin-top:.6rem;">
+          <dt>Identifiant</dt><dd id="mViewId">—</dd><dt>Commanditaire</dt><dd id="mViewPoster">—</dd>
+          <dt>Prestataire</dt><dd id="mViewWorker">—</dd><dt>Récompense</dt><dd id="mViewReward">—</dd>
+          <dt>État</dt><dd id="mViewState">—</dd><dt>Issue</dt><dd id="mViewOutcome">—</dd>
+          <dt>Créée le</dt><dd id="mViewCreated">—</dd><dt>Prise le</dt><dd id="mViewTaken">—</dd>
+          <dt>Clôturée le</dt><dd id="mViewClosed">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Actions sur les missions</h3>
+        <div class="action-grid">
+          <div class="action-box" id="act-post"></div><div class="action-box" id="act-accept"></div><div class="action-box" id="act-close"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Console de l'émetteur -->
+    <section id="sec-issuer" aria-labelledby="h-issuer">
+      <div class="sec-head"><h2 id="h-issuer">6. Console de l'émetteur</h2><button id="issuerRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <h3>Gouvernance et horloge</h3>
+        <dl class="kv">
+          <dt>Autorité émettrice (<code>issuer</code>)</dt><dd id="govIssuer">—</dd>
+          <dt>Horloge on-chain (<code>clock</code>)</dt><dd id="govClock">—</dd>
+        </dl>
+        <h4 class="subhead">Agrément plateforme (vue <code>platform</code>)</h4>
+        <form id="platformForm" class="row row-tight">
+          <div class="field"><label for="platAccount">Compte plateforme</label><input id="platAccount" type="text" placeholder="missions.testnet"></div>
+          <div class="field field-action"><button type="submit" class="btn-sm">Vérifier</button></div>
+        </form>
+        <dl class="kv" style="margin-top:.6rem;">
+          <dt>Compte</dt><dd id="platTarget">—</dd><dt>Agrément actif</dt><dd id="platActive">—</dd>
+          <dt>Avertissements</dt><dd id="platWarnings">—</dd><dt>Date d'agrément</dt><dd id="platApproved">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Actions de l'émetteur</h3>
+        <div class="action-grid">
+          <div class="action-box" id="act-issue"></div><div class="action-box" id="act-approveplatform"></div>
+          <div class="action-box" id="act-resolvecontest"></div><div class="action-box" id="act-strikeplatform"></div>
+          <div class="action-box" id="act-revokelicense"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Barème et catégories -->
+    <section id="sec-rules" aria-labelledby="h-rules">
+      <div class="sec-head"><h2 id="h-rules">7. Barème et catégories</h2><button id="rulesRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <label for="catSelect"><strong>Choisir la catégorie :</strong></label>
+        <select id="catSelect" style="margin-bottom:1rem;"></select>
+        <table>
+          <caption class="sr-only">Paramètres du barème de la catégorie sélectionnée</caption>
+          <thead><tr><th scope="col">Paramètre du barème</th><th scope="col">Valeur</th><th scope="col">Description</th></tr></thead>
+          <tbody id="rulesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8. Fonds de garantie -->
+    <section id="sec-fund" aria-labelledby="h-fund">
+      <div class="sec-head"><h2 id="h-fund">8. Fonds de garantie</h2><button id="fundRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
+      <div class="card">
+        <p class="fund" id="fundValue">—</p>
+        <p class="muted">Solde mutualisé issu des prélèvements de caution (20 % sur signalement grave) et des dépôts de recours non retenus.</p>
+        <div class="invariant-box">
+          <h4>Invariant comptable I2</h4>
+          <p class="code-line">Σ cautions + Fonds + Σ crédits + missions en cours = Σ dépôts − Σ retraits</p>
+          <p class="hint">Garantit qu'aucun yoctoNEAR ne peut disparaître ni être créé hors des flux légitimes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Scénario en 9 étapes -->
+    <section id="sec-scenario" aria-labelledby="h-scenario">
+      <div class="sec-head"><h2 id="h-scenario">9. Le scénario en 9 étapes (démonstrateur sandbox)</h2></div>
+      <div class="card">
+        <p class="hint">Tableau statique certifié par <code>make demo</code> (section 13 du cahier). Démontre le cycle complet du permis même hors-ligne.</p>
+        <table>
+          <caption class="sr-only">Les 9 étapes certifiées du scénario de démonstration</caption>
+          <thead><tr><th scope="col">Étape</th><th scope="col">Action effectuée</th><th scope="col">Attendu</th><th scope="col">Obtenu par <code>make demo</code></th></tr></thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td>Délivrance permis Léa (caution 1 Ⓝ)</td><td>6 pts, probatoire, caution 1 Ⓝ</td><td>6 pts, probation, demerit-1, caution 1,0000 Ⓝ</td></tr>
+            <tr><td><strong>2</strong></td><td>Mission acceptée et close sans faute</td><td>Mission payée, missions_ok = 1</td><td>missions_ok=1, 6 pts, mission payée</td></tr>
+            <tr><td><strong>3</strong></td><td>Mission avec signalement moyen</td><td>Perte de 3 points</td><td>3 pts, invalidations=0, -3 pts appliqués</td></tr>
+            <tr><td><strong>4</strong></td><td>Avancement temporel (+6 mois)</td><td>4 points : régénération active</td><td>4 pts (régénération passive +1 pt)</td></tr>
+            <tr><td><strong>5</strong></td><td>Signalement grave</td><td>0 pt, suspension 6 mois, fonds +0,20 Ⓝ, client +0,20 Ⓝ</td><td>0 pt, suspendu, fonds +0,20 Ⓝ, client +0,20 Ⓝ, coef 1,25×</td></tr>
+            <tr><td><strong>6</strong></td><td>Léa tente d'accepter une mission</td><td>Refus <code>ERR_LICENSE_SUSPENDED</code></td><td>Refus avec code précis <code>ERR_LICENSE_SUSPENDED</code></td></tr>
+            <tr><td><strong>7</strong></td><td>Tentative nouveau permis lea2 (même empreinte)</td><td>Refus <code>ERR_IDENTITY_SUSPENDED</code></td><td>Refus avec code précis <code>ERR_IDENTITY_SUSPENDED</code></td></tr>
+            <tr><td><strong>8</strong></td><td>Fin de suspension + réajustement caution</td><td>Probatoire 6 pts, refus sous-garanti puis acceptation</td><td>Refus <code>ERR_UNDER_BONDED</code> puis succès après <code>top_up_bond</code></td></tr>
+            <tr><td><strong>9</strong></td><td>Tentative de transfert <code>nft_transfer</code></td><td>Refus <code>ERR_SOULBOUND</code></td><td>Refus catégorique <code>ERR_SOULBOUND</code> (jeton non transférable)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <p>Demerit — Registre public NEAR. Lecture JSON-RPC native sans serveur intermédiaire, zéro CDN, zéro dépendance.</p>
+  </footer>
+</div>
+<script src="config.js"></script>
+<script src="actions.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

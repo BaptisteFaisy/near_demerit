@@ -1,291 +1,212 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demerit — registre de permis à points sur NEAR</title>
-<meta name="description" content="Consultation publique et tableau de bord du registre Demerit : permis professionnel à points, soulbound, déployé sur NEAR.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314213d'/%3E%3Cpath d='M7 21h18' stroke='%23fca311' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M11 11h10' stroke='%23e5e5e5' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>demerit — the points licence for gig workers</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111'/%3E%3Cpath d='M16 6l10 10-10 10-10-10z' fill='%233a2bff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--bg:#f5f5f2;--ink:#111;--mut:#6b6b66;--line:#d9d9d3;--accent:#3a2bff;--hatch:repeating-linear-gradient(-45deg,#cfcfc8 0 1px,transparent 1px 7px)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 'JetBrains Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+.frame{max-width:1360px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line);position:relative}
+nav{display:flex;align-items:center;gap:28px;height:64px;padding:0 32px;border-bottom:1px solid var(--line);max-width:1360px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.brand svg{width:30px;height:30px}
+nav a.l{color:var(--mut);text-decoration:none;font-size:13px}
+nav .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 18px;border:1px solid var(--ink);font:500 13px 'JetBrains Mono';color:var(--ink);background:transparent;text-decoration:none}
+.btn.k{background:var(--ink);color:#fff}
+.hatch{height:22px;background:var(--hatch);border-bottom:1px solid var(--line)}
+.corner{position:absolute;width:7px;height:7px;background:var(--ink)}
+.hero{display:grid;grid-template-columns:1fr 1.05fr;min-height:560px;border-bottom:1px solid var(--line)}
+.copy{padding:56px 40px 40px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.tag{font-size:12px;color:var(--mut);display:flex;gap:10px;align-items:center}
+.tag i{width:8px;height:8px;background:var(--accent);display:inline-block}
+h1{font-size:58px;line-height:1.02;letter-spacing:-.045em;font-weight:500;margin:22px 0 20px}
+h1 b{font-weight:800}
+h1 u{text-decoration:none;background:linear-gradient(transparent 62%,#d9d5ff 62%)}
+.lead{font-size:16px;max-width:470px;color:#333}
+.ctas{display:flex;gap:12px;margin-top:30px}
+.who{margin-top:auto;padding-top:34px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line)}
+.who{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);margin-top:auto;padding-top:34px}
+.who div{padding:14px 10px 0 0}
+.live-strip{border:1px solid var(--line);border-left:3px solid var(--accent);padding:12px 14px;font-size:12.5px;color:var(--muted);margin-top:28px;background:var(--paper)}
+.live-strip b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+.who b{display:block;font-size:13px}
+.who span{font-size:11px;color:var(--mut)}
+.who i{display:block;width:22px;height:22px;border:1px solid var(--ink);margin-bottom:10px;position:relative}
+.who i:after{content:'';position:absolute;inset:5px;background:var(--ink)}
+.who div:first-child i:after{background:var(--accent)}
+.stage{display:grid;grid-template-rows:1fr 244px}
+#gl{width:100%;height:100%;display:block}
+.vis{position:relative;border-bottom:1px solid var(--line)}
+.legend{position:absolute;left:24px;top:20px;font-size:12px;color:var(--mut)}
+.legend b{color:var(--ink)}
+.labels{position:absolute;inset:0;pointer-events:none}.lb{position:absolute;transform:translate(-50%,-50%);font-size:11px;line-height:1.25;text-align:center;background:var(--bg);padding:2px 6px;border:1px solid var(--line);white-space:nowrap}.lb b{display:block;font-size:12px}.lb.me{border-color:var(--accent)}.lb.me b{color:var(--accent)}.lb.off{opacity:0}.lb.no{border-color:#d33;color:#d33}.cap{position:absolute;left:24px;bottom:16px;font-size:12px;padding:4px 10px;background:var(--ink);color:#fff}.cap.no{background:#d33}
+.pts{position:absolute;right:24px;top:18px;text-align:right}
+.pts b{font-size:64px;font-weight:800;letter-spacing:-.05em;line-height:1}
+.pts span{display:block;font-size:12px;color:var(--mut)}
+.term{background:#0d0d0d;color:#e8e8e8;padding:0;display:flex;flex-direction:column}
+.term header{display:flex;gap:12px;align-items:center;height:36px;padding:0 16px;border-bottom:1px solid #262626;font-size:12px;color:#9a9a9a}
+.term header .d{display:flex;gap:6px}.term header .d i{width:9px;height:9px;border:1px solid #555}
+.term header .live{margin-left:auto;color:#c9c3ff}
+.term ol{list-style:none;padding:12px 16px;font-size:12.5px;line-height:1.75;overflow:hidden;flex:1}
+.term li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.term .m{color:#7a7a7a}.term .c{color:#fff}.term .e{color:#a99fff}.term .x{color:#8a8a8a;padding-left:12px}.term .o{color:#8fe3a6}.term .r{color:#ff8a7a}
+.steps{display:grid;grid-template-columns:repeat(4,1fr)}
+.steps div{padding:30px 28px 40px;border-right:1px solid var(--line)}
+.steps div:last-child{border:0}
+.steps em{font-style:normal;color:var(--accent);font-size:12px}
+.steps h3{font-size:20px;letter-spacing:-.02em;margin:10px 0 8px}
+.steps p{color:var(--mut);font-size:13px}
+.dark{background:#0d0d0d;color:#fff;padding:70px 40px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.dark h2{font-size:40px;letter-spacing:-.04em;font-weight:500;line-height:1.08}
+.dark p{color:#aaa;max-width:520px}
+</style>
 </head>
 <body>
-<a class="skip" href="#main">Aller au contenu</a>
-<header class="top">
-  <div class="wrap">
-    <h1>Demerit</h1>
-    <p class="sub">Registre public de permis professionnel à points sur NEAR. Données lues en direct sur la chaîne.</p>
-    <nav class="nav" aria-label="Sections">
-      <a href="#sec-consult">1. Consultation</a>
-      <a href="#sec-check">2. Contrôle</a>
-      <a href="#sec-nft">3. Permis NFT</a>
-      <a href="#sec-holder">4. Mon permis</a>
-      <a href="#sec-missions">5. Missions</a>
-      <a href="#sec-issuer">6. Émetteur</a>
-      <a href="#sec-rules">7. Barème</a>
-      <a href="#sec-fund">8. Fonds</a>
-      <a href="#sec-scenario">9. Scénario</a>
-    </nav>
-  </div>
-</header>
-<div class="wrap">
-  <div id="banner" class="banner" role="alert" hidden></div>
-  <div id="notice" class="notice" hidden></div>
-  <main id="main">
-    <!-- 1. Consultation publique -->
-    <section id="sec-consult" aria-labelledby="h-consult">
-      <div class="sec-head"><h2 id="h-consult">1. Consultation publique</h2><button id="consultRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <form id="lookupForm" class="card form">
-        <div class="row">
-          <div class="field"><label for="account">Compte NEAR</label><input id="account" name="account" type="text" autocomplete="off" placeholder="lea.testnet" spellcheck="false" required></div>
-          <div class="field"><label for="category">Catégorie</label><input id="category" name="category" type="text" list="categoryList" placeholder="coursier" autocomplete="off" spellcheck="false"><datalist id="categoryList"></datalist></div>
-          <div class="field field-action"><button id="submitBtn" type="submit">Consulter</button></div>
-        </div>
-        <p class="hint">Lecture publique gratuite via JSON-RPC. Aucun portefeuille requis.</p>
-      </form>
-      <div id="result" class="card-grid" hidden>
-        <div class="card">
-          <h3>Statut du permis (vue <code>status</code>)</h3>
-          <div class="badge-row"><span class="badge" id="statusBadge">—</span><span class="badge badge-warn" id="underBondedBadge" hidden>Sous-garanti</span></div>
-          <div class="gauge" role="img" aria-label="Jauge de points"><div class="gauge-fill" id="pointsBar" style="width:0%"></div></div>
-          <p class="gauge-text" id="pointsText">—</p>
-          <dl class="kv">
-            <dt>Titulaire</dt><dd id="holder">—</dd><dt>Jeton (token_id)</dt><dd id="tokenId">—</dd>
-            <dt>Identité</dt><dd id="identity">—</dd><dt>Plafond</dt><dd id="cap">—</dd>
-            <dt>Statut</dt><dd id="statusLabel">—</dd><dt>Coefficient</dt><dd id="coef">—</dd>
-            <dt>Caution versée</dt><dd id="bond">—</dd><dt>Caution exigée</dt><dd id="bondRequired">—</dd>
-            <dt>Invalidations</dt><dd id="invalidations">—</dd><dt>Missions réussies / signalées</dt><dd id="missionsRatio">—</dd>
-            <dt>Suspension jusqu'au</dt><dd id="suspendedUntil">—</dd><dt>Prochaine régénération</dt><dd id="nextRegen">—</dd>
-            <dt>Prochain gain de plafond</dt><dd id="nextCapGain">—</dd><dt>Motifs de refus</dt><dd id="reasons">—</dd>
-          </dl>
-        </div>
-        <div class="card">
-          <h3>Fiche d'enregistrement (vue <code>license</code>)</h3>
-          <dl class="kv">
-            <dt>Délivré le (ancienneté)</dt><dd id="licIssuedAt">—</dd><dt>Dernier signalement</dt><dd id="licLastReport">—</dd>
-            <dt>Dernière invalidation</dt><dd id="licLastInval">—</dd><dt>Série (streak_ok)</dt><dd id="licStreak">—</dd>
-            <dt>Dernier stage</dt><dd id="licLastStage">—</dd><dt>Version de barème</dt><dd id="licRulesVersion">—</dd>
-            <dt>Points enregistrés</dt><dd id="licPoints">—</dd><dt>Plafond enregistré</dt><dd id="licCap">—</dd>
-            <dt>Caution enregistrée</dt><dd id="licBond">—</dd><dt>Missions sans signalement</dt><dd id="licMissionsOk">—</dd>
-            <dt>Catégorie</dt><dd id="licCategory">—</dd>
-          </dl>
-        </div>
+<nav><a class="brand" href="index.html"><span id="mk"></span>demerit</a><a class="l" href="#how">How it works</a><a class="l" href="#for">For platforms</a><a class="l" href="app.html#/check">Live check</a><span class="sp"></span><span class="tag" id="net"><i></i>NEAR testnet · reading…</span><a class="btn k" href="app.html">Open the app</a></nav>
+<div class="frame">
+  <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span>
+  <div class="hatch"></div>
+  <section class="hero">
+    <div class="copy">
+      <span class="tag"><i></i>The points licence for gig workers</span>
+      <h1>Reputation you can <b><u>lose</u></b>,<br>not <b>sell.</b></h1>
+      <p class="lead">Stars reset when a bad courier opens a new account. A demerit licence doesn't: one soulbound NFT on NEAR, checked by every platform, backed by a deposit that repays the client.</p>
+      <div class="ctas"><a class="btn k" href="app.html">Get my licence →</a><a class="btn" href="app.html#/check">Check a licence</a></div>
+      <div class="live-strip" id="liveStrip"><b>Reading the chain…</b>every number on this site comes from NEAR testnet.</div>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="stage">
+      <div class="vis"><canvas id="gl"></canvas>
+        <div class="legend"><b>ledger.demerit.testnet</b> · the registry<br>12 cubes = Léa's points · lines = calls<br><span style="opacity:.65">scenario replay · the same code as the chain</span></div><div class="labels" id="labels"></div><div class="cap" id="cap">Licence issued · 6 points on probation</div>
+        <div class="pts"><b id="pv">6</b><span id="pvCap">/ 12 points · probation</span></div>
       </div>
-      <div class="card" id="reportsCard">
-        <h3>20 derniers signalements</h3>
-        <table>
-          <caption class="sr-only">20 derniers signalements enregistrés sur le permis</caption>
-          <thead><tr><th scope="col">Mission</th><th scope="col">Classe</th><th scope="col">Date</th><th scope="col">État</th><th scope="col">Points perdus</th><th scope="col">Prélevé</th></tr></thead>
-          <tbody id="reportsBody"></tbody>
-        </table>
-        <p class="muted" id="reportsEmpty">Aucun signalement à afficher.</p>
-      </div>
-    </section>
-
-    <!-- 2. Contrôle d'accès (check) -->
-    <section id="sec-check" aria-labelledby="h-check">
-      <div class="sec-head"><h2 id="h-check">2. Contrôle d'accès (<code>check</code>)</h2></div>
-      <form id="checkForm" class="card form">
-        <p class="hint">Simule la vérification qu'un contrat tiers ou une plateforme appelle avant d'attribuer une mission.</p>
-        <div class="row">
-          <div class="field"><label for="chkAccount">Compte ou délégué</label><input id="chkAccount" type="text" placeholder="lea.testnet" required></div>
-          <div class="field"><label for="chkCategory">Catégorie</label><input id="chkCategory" type="text" placeholder="coursier" value="coursier" required></div>
-          <div class="field"><label for="chkMinPoints">Points min.</label><input id="chkMinPoints" type="number" min="0" max="12" value="9"></div>
-          <div class="field"><label for="chkMinMissions">Missions min.</label><input id="chkMinMissions" type="number" min="0" value="5"></div>
-          <div class="field"><label for="chkMaxInval">Invalidations max.</label><input id="chkMaxInval" type="number" min="0" value="0"></div>
-          <div class="field"><label for="chkMinAge">Ancienneté min. (mois)</label><input id="chkMinAge" type="number" min="0" value="0"></div>
-          <div class="field"><label for="chkMaxCoef">Coefficient max.</label><input id="chkMaxCoef" type="number" min="100" value="150"></div>
-          <div class="field field-action"><button id="checkBtn" type="submit">Vérifier</button></div>
-        </div>
-      </form>
-      <div class="card" id="checkVerdictCard">
-        <h3>Verdict de contrôle</h3>
-        <p class="badge" id="checkBadge">En attente de vérification</p>
-        <dl class="kv">
-          <dt>Autorisé (<code>allowed</code>)</dt><dd id="chkAllowed">—</dd>
-          <dt>Code de refus (<code>code</code>)</dt><dd><code id="chkCode">—</code></dd>
-          <dt>Points effectifs</dt><dd id="chkPoints">—</dd>
-          <dt>Statut calculé</dt><dd id="chkStatus">—</dd>
-        </dl>
-      </div>
-    </section>
-
-    <!-- 3. Permis en un coup d'œil (NFT) -->
-    <section id="sec-nft" aria-labelledby="h-nft">
-      <div class="sec-head"><h2 id="h-nft">3. Permis en un coup d'œil (NFT NEP-171 / NEP-181)</h2><button id="nftRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <p class="nft-title" id="nftTitle">—</p>
-        <p class="muted">Le contrat calcule son titre et son état à chaque lecture : le portefeuille affiche le statut du jour sans transaction.</p>
-        <dl class="kv">
-          <dt>Identifiant de jeton</dt><dd id="nftTokenId">—</dd>
-          <dt>Propriétaire actuel</dt><dd id="nftOwner">—</dd>
-          <dt>Édition / Spécification</dt><dd id="nftEdition">—</dd>
-          <dt>Titre dynamique calculé</dt><dd id="nftComputedTitle">—</dd>
-          <dt>Attributs JSON (<code>extra</code>)</dt><dd><pre class="code-pre" id="nftExtra">—</pre></dd>
-        </dl>
-        <h4 class="subhead">Permis du titulaire (<code>nft_tokens_for_owner</code>)</h4>
-        <table>
-          <caption class="sr-only">Liste des jetons NFT détenus</caption>
-          <thead><tr><th scope="col">Jeton</th><th scope="col">Titre calculé</th><th scope="col">Propriétaire</th></tr></thead>
-          <tbody id="nftOwnerTokensBody"></tbody>
-        </table>
-        <p class="muted" id="nftOwnerTokensEmpty">Aucun jeton pour ce compte.</p>
-      </div>
-    </section>
-
-    <!-- 4. Mon permis (actions titulaire) -->
-    <section id="sec-holder" aria-labelledby="h-holder">
-      <div class="sec-head"><h2 id="h-holder">4. Mon permis (actions titulaire)</h2><button id="holderRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <h3>Situation financière du titulaire</h3>
-        <dl class="kv">
-          <dt>Caution versée</dt><dd id="myBond">—</dd><dt>Caution exigée</dt><dd id="myBondRequired">—</dd>
-          <dt>Excédent de caution retirable</dt><dd id="myBondExcess">—</dd><dt>Crédit en attente</dt><dd id="myCredit">—</dd>
-        </dl>
-      </div>
-      <div class="card">
-        <h3>Délégation active (vue <code>delegation</code>)</h3>
-        <form id="delegationForm" class="row row-tight">
-          <div class="field"><label for="delDelegate">Compte du délégué</label><input id="delDelegate" type="text" placeholder="agent1.lea.testnet"></div>
-          <div class="field"><label for="delCategory">Catégorie</label><input id="delCategory" type="text" placeholder="coursier" value="coursier"></div>
-          <div class="field field-action"><button type="submit" class="btn-sm">Consulter</button></div>
-        </form>
-        <dl class="kv" style="margin-top:.6rem;">
-          <dt>Titulaire</dt><dd id="delHolder">—</dd><dt>Délégué</dt><dd id="delDelegateOut">—</dd>
-          <dt>Catégorie</dt><dd id="delCatOut">—</dd><dt>Échéance</dt><dd id="delExpires">—</dd>
-        </dl>
-      </div>
-      <div class="card">
-        <h3>Actions du titulaire</h3>
-        <div class="action-grid">
-          <div class="action-box" id="act-topup"></div><div class="action-box" id="act-withdrawecess"></div>
-          <div class="action-box" id="act-delegate"></div><div class="action-box" id="act-revokedelegate"></div>
-          <div class="action-box" id="act-contest"></div><div class="action-box" id="act-claimstage"></div>
-          <div class="action-box" id="act-renounce"></div><div class="action-box" id="act-withdraw"></div>
-          <div class="action-box" id="act-transfer"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. Tableau des missions -->
-    <section id="sec-missions" aria-labelledby="h-missions">
-      <div class="sec-head"><h2 id="h-missions">5. Tableau des missions</h2><button id="missionsRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <span class="muted" id="missionsStatus"></span>
-        <table>
-          <caption class="sr-only">Missions publiées sur la plateforme</caption>
-          <thead><tr><th scope="col">Id</th><th scope="col">Récompense</th><th scope="col">État</th><th scope="col">Prestataire</th><th scope="col">Issue</th></tr></thead>
-          <tbody id="missionsBody"></tbody>
-        </table>
-        <p class="muted" id="missionsEmpty">Aucune mission publiée.</p>
-      </div>
-      <div class="card">
-        <h3>Détail d'une mission (vue <code>mission</code>)</h3>
-        <form id="missionDetailForm" class="row row-tight">
-          <div class="field"><label for="detailMissionId">Numéro de mission (id)</label><input id="detailMissionId" type="number" min="0" placeholder="0"></div>
-          <div class="field field-action"><button type="submit" class="btn-sm">Afficher</button></div>
-        </form>
-        <dl class="kv" style="margin-top:.6rem;">
-          <dt>Identifiant</dt><dd id="mViewId">—</dd><dt>Commanditaire</dt><dd id="mViewPoster">—</dd>
-          <dt>Prestataire</dt><dd id="mViewWorker">—</dd><dt>Récompense</dt><dd id="mViewReward">—</dd>
-          <dt>État</dt><dd id="mViewState">—</dd><dt>Issue</dt><dd id="mViewOutcome">—</dd>
-          <dt>Créée le</dt><dd id="mViewCreated">—</dd><dt>Prise le</dt><dd id="mViewTaken">—</dd>
-          <dt>Clôturée le</dt><dd id="mViewClosed">—</dd>
-        </dl>
-      </div>
-      <div class="card">
-        <h3>Actions sur les missions</h3>
-        <div class="action-grid">
-          <div class="action-box" id="act-post"></div><div class="action-box" id="act-accept"></div><div class="action-box" id="act-close"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. Console de l'émetteur -->
-    <section id="sec-issuer" aria-labelledby="h-issuer">
-      <div class="sec-head"><h2 id="h-issuer">6. Console de l'émetteur</h2><button id="issuerRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <h3>Gouvernance et horloge</h3>
-        <dl class="kv">
-          <dt>Autorité émettrice (<code>issuer</code>)</dt><dd id="govIssuer">—</dd>
-          <dt>Horloge on-chain (<code>clock</code>)</dt><dd id="govClock">—</dd>
-        </dl>
-        <h4 class="subhead">Agrément plateforme (vue <code>platform</code>)</h4>
-        <form id="platformForm" class="row row-tight">
-          <div class="field"><label for="platAccount">Compte plateforme</label><input id="platAccount" type="text" placeholder="missions.testnet"></div>
-          <div class="field field-action"><button type="submit" class="btn-sm">Vérifier</button></div>
-        </form>
-        <dl class="kv" style="margin-top:.6rem;">
-          <dt>Compte</dt><dd id="platTarget">—</dd><dt>Agrément actif</dt><dd id="platActive">—</dd>
-          <dt>Avertissements</dt><dd id="platWarnings">—</dd><dt>Date d'agrément</dt><dd id="platApproved">—</dd>
-        </dl>
-      </div>
-      <div class="card">
-        <h3>Actions de l'émetteur</h3>
-        <div class="action-grid">
-          <div class="action-box" id="act-issue"></div><div class="action-box" id="act-approveplatform"></div>
-          <div class="action-box" id="act-resolvecontest"></div><div class="action-box" id="act-strikeplatform"></div>
-          <div class="action-box" id="act-revokelicense"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. Barème et catégories -->
-    <section id="sec-rules" aria-labelledby="h-rules">
-      <div class="sec-head"><h2 id="h-rules">7. Barème et catégories</h2><button id="rulesRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <label for="catSelect"><strong>Choisir la catégorie :</strong></label>
-        <select id="catSelect" style="margin-bottom:1rem;"></select>
-        <table>
-          <caption class="sr-only">Paramètres du barème de la catégorie sélectionnée</caption>
-          <thead><tr><th scope="col">Paramètre du barème</th><th scope="col">Valeur</th><th scope="col">Description</th></tr></thead>
-          <tbody id="rulesBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 8. Fonds de garantie -->
-    <section id="sec-fund" aria-labelledby="h-fund">
-      <div class="sec-head"><h2 id="h-fund">8. Fonds de garantie</h2><button id="fundRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
-      <div class="card">
-        <p class="fund" id="fundValue">—</p>
-        <p class="muted">Solde mutualisé issu des prélèvements de caution (20 % sur signalement grave) et des dépôts de recours non retenus.</p>
-        <div class="invariant-box">
-          <h4>Invariant comptable I2</h4>
-          <p class="code-line">Σ cautions + Fonds + Σ crédits + missions en cours = Σ dépôts − Σ retraits</p>
-          <p class="hint">Garantit qu'aucun yoctoNEAR ne peut disparaître ni être créé hors des flux légitimes.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9. Scénario en 9 étapes -->
-    <section id="sec-scenario" aria-labelledby="h-scenario">
-      <div class="sec-head"><h2 id="h-scenario">9. Le scénario en 9 étapes (démonstrateur sandbox)</h2></div>
-      <div class="card">
-        <p class="hint">Tableau statique certifié par <code>make demo</code> (section 13 du cahier). Démontre le cycle complet du permis même hors-ligne.</p>
-        <table>
-          <caption class="sr-only">Les 9 étapes certifiées du scénario de démonstration</caption>
-          <thead><tr><th scope="col">Étape</th><th scope="col">Action effectuée</th><th scope="col">Attendu</th><th scope="col">Obtenu par <code>make demo</code></th></tr></thead>
-          <tbody>
-            <tr><td><strong>1</strong></td><td>Délivrance permis Léa (caution 1 Ⓝ)</td><td>6 pts, probatoire, caution 1 Ⓝ</td><td>6 pts, probation, demerit-1, caution 1,0000 Ⓝ</td></tr>
-            <tr><td><strong>2</strong></td><td>Mission acceptée et close sans faute</td><td>Mission payée, missions_ok = 1</td><td>missions_ok=1, 6 pts, mission payée</td></tr>
-            <tr><td><strong>3</strong></td><td>Mission avec signalement moyen</td><td>Perte de 3 points</td><td>3 pts, invalidations=0, -3 pts appliqués</td></tr>
-            <tr><td><strong>4</strong></td><td>Avancement temporel (+6 mois)</td><td>4 points : régénération active</td><td>4 pts (régénération passive +1 pt)</td></tr>
-            <tr><td><strong>5</strong></td><td>Signalement grave</td><td>0 pt, suspension 6 mois, fonds +0,20 Ⓝ, client +0,20 Ⓝ</td><td>0 pt, suspendu, fonds +0,20 Ⓝ, client +0,20 Ⓝ, coef 1,25×</td></tr>
-            <tr><td><strong>6</strong></td><td>Léa tente d'accepter une mission</td><td>Refus <code>ERR_LICENSE_SUSPENDED</code></td><td>Refus avec code précis <code>ERR_LICENSE_SUSPENDED</code></td></tr>
-            <tr><td><strong>7</strong></td><td>Tentative nouveau permis lea2 (même empreinte)</td><td>Refus <code>ERR_IDENTITY_SUSPENDED</code></td><td>Refus avec code précis <code>ERR_IDENTITY_SUSPENDED</code></td></tr>
-            <tr><td><strong>8</strong></td><td>Fin de suspension + réajustement caution</td><td>Probatoire 6 pts, refus sous-garanti puis acceptation</td><td>Refus <code>ERR_UNDER_BONDED</code> puis succès après <code>top_up_bond</code></td></tr>
-            <tr><td><strong>9</strong></td><td>Tentative de transfert <code>nft_transfer</code></td><td>Refus <code>ERR_SOULBOUND</code></td><td>Refus catégorique <code>ERR_SOULBOUND</code> (jeton non transférable)</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-  <footer class="foot">
-    <p>Demerit — Registre public NEAR. Lecture JSON-RPC native sans serveur intermédiaire, zéro CDN, zéro dépendance.</p>
-  </footer>
+      <div class="term"><header><span class="d"><i></i><i></i><i></i></span>near-cli · on-chain activity<span class="live">● ledger.demerit.testnet</span></header><ol id="log"></ol></div>
+    </div>
+  </section>
+  <section class="steps" id="how"></section>
+  <div class="hatch" style="border-top:1px solid var(--line)"></div>
+  <section class="dark" id="for"><h2>One licence.<br>Every platform.<br>No fresh start.</h2><p>Platforms call <b style="color:#fff">ledger.demerit.testnet.is_allowed()</b> before assigning a job. Points are recomputed from timestamps at read time, so reading is free. A serious fault moves money from the courier's deposit to the client, in the same transaction.</p><p><a href="dashboard.html" style="color:#c9c3ff">Full live dashboard — nine sections over the deployed contracts →</a></p></section>
 </div>
-<script src="config.js"></script>
-<script src="actions.js"></script>
-<script src="app.js"></script>
+<script src="chain.js" defer></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { MARK, PARTIES, STEPS, terminal } from './common.js';
+/* Live strip: read Léa's real licence once, keep the 3D replay honest. */
+(function () {
+  const strip = document.getElementById('liveStrip'), net = document.getElementById('net');
+  const toNear = window.DemeritChain && window.DemeritChain.toNear;
+  window.DemeritChain.view('ledger.demerit.testnet', 'status', { account: 'lea.demerit.testnet', category: 'coursier' })
+    .then(s => {
+      net.innerHTML = '<i></i>NEAR testnet · live';
+      strip.innerHTML = '<b>Live from ledger.demerit.testnet</b>Léa holds ' + s.points + '/' + s.cap + ' points · ' + s.status +
+        ' · deposit ' + toNear(s.bond) + '/' + toNear(s.required_bond) + ' Ⓝ · price factor ×' + (s.coefficient / 100).toFixed(2);
+      /* The chain wins over the replay: the big counter shows the real points. */
+      window.__demeritLive = s;
+      document.getElementById('pv').textContent = s.points;
+      document.getElementById('pvCap').textContent = '/ ' + s.cap + ' points · ' + s.status + ' · live';
+    })
+    .catch(() => {
+      net.innerHTML = '<i></i>NEAR testnet · unreachable';
+      strip.innerHTML = '<b>Testnet unreachable</b>The 3D plays the scenario; live data is read from the app.';
+    });
+})();
+document.getElementById('mk').outerHTML = MARK.replace('<svg', '<svg width="30" height="30"');
+document.getElementById('who').innerHTML = PARTIES.map(p => `<div><i></i><b>${p.name}</b><span>${p.role}</span></div>`).join('');
+document.getElementById('how').innerHTML = STEPS.map(s => `<div><em>${s[0]}</em><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join('');
+// The registry and its five parties, wired. Every terminal line drives the scene, so the 3D shows what the log says.
+const cv = document.getElementById('gl'), box = cv.parentElement;
+const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+r.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, .1, 100);
+const INK = 0x111111, ACC = 0x3a2bff, RED = 0xdd3333, GREY = 0xb5b5ad;
+const edges = (geo, color = INK, op = 1) => new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color, transparent: true, opacity: op }));
+// registry slab + 12 point cubes
+const reg = new THREE.Group(); scene.add(reg);
+const slab = edges(new THREE.BoxGeometry(3.4, .5, 2.6)); slab.position.y = .25; reg.add(slab);
+const cubes = [];
+for (let i = 0; i < 12; i++) {
+  const g = new THREE.Group(), x = -1.2 + (i % 4) * .8, z = -.65 + Math.floor(i / 4) * .65;
+  const fill = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), new THREE.MeshBasicMaterial({ color: ACC, transparent: true, opacity: 0 }));
+  const w = edges(new THREE.BoxGeometry(.5, .5, .5), INK, .9);
+  g.add(fill, w); g.position.set(x, .78, z); reg.add(g);
+  cubes.push({ g, fill, w, on: 0, target: 0 });
+}
+// parties
+const P = {
+  lea: { pos: [-4.4, 0, 1.4], geo: new THREE.CylinderGeometry(.42, .42, 1.3, 20, 1), name: 'Léa · courier', id: 'lea.demerit.testnet', me: 1 },
+  sam: { pos: [4.2, 0, 2.2], geo: new THREE.BoxGeometry(.9, .9, .9), name: 'Sam · customer', id: 'client.demerit.testnet' },
+  plat: { pos: [4.0, 0, -2.4], geo: new THREE.BoxGeometry(1.6, 1.5, 1.1), name: 'Platform · any gig app', id: 'platform.demerit.testnet' },
+  fund: { pos: [-3.8, 0, -2.8], geo: new THREE.CylinderGeometry(.55, .55, .7, 6, 1), name: 'Guarantee fund', id: 'held by the registry' },
+  lea2: { pos: [-4.9, 0, 4.2], geo: new THREE.CylinderGeometry(.42, .42, 1.3, 20, 1), name: 'lea2 · new account', id: 'same fingerprint' },
+};
+const labels = document.getElementById('labels');
+for (const [k, p] of Object.entries(P)) {
+  const h = p.geo.parameters.height || .9;
+  p.obj = edges(p.geo, p.me ? ACC : INK); p.obj.position.set(p.pos[0], h / 2, p.pos[2]); scene.add(p.obj);
+  p.top = new THREE.Vector3(p.pos[0], h + .55, p.pos[2]);
+  const pts = [new THREE.Vector3(p.pos[0], .02, p.pos[2]), new THREE.Vector3(0, .02, 0)];
+  p.line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: INK, dashSize: .12, gapSize: .1, transparent: true, opacity: .45 }));
+  p.line.computeLineDistances(); scene.add(p.line);
+  p.el = document.createElement('div'); p.el.className = 'lb' + (p.me ? ' me' : ''); p.el.innerHTML = `<b>${p.name}</b>${p.id}`; labels.appendChild(p.el);
+}
+const regLabel = document.createElement('div'); regLabel.className = 'lb'; regLabel.innerHTML = '<b>Registry</b>ledger.demerit.testnet'; labels.appendChild(regLabel);
+const show = (k, on) => { P[k].obj.visible = P[k].line.visible = on; P[k].el.classList.toggle('off', !on); };
+show('lea2', false);
+// pulses travel along the floor between two parties (or the registry)
+const pulses = [];
+const at = k => k === 'reg' ? new THREE.Vector3(0, .5, 0) : new THREE.Vector3(P[k].pos[0], .5, P[k].pos[2]);
+function pulse(a, b, { color = ACC, stop = 1, delay = 0 } = {}) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .22), new THREE.MeshBasicMaterial({ color })); m.visible = false; scene.add(m);
+  pulses.push({ m, a: at(a), b: at(b), t: -delay, stop });
+}
+const pv = document.getElementById('pv'), cap = document.getElementById('cap');
+/* The replay drives the cubes; the counter follows the chain when it answered. */
+const setPts = n => { cubes.forEach((c, i) => c.target = i < n ? 1 : 0); if (!window.__demeritLive) pv.textContent = n; };
+const say = (t, no) => { cap.textContent = t; cap.classList.toggle('no', !!no); };
+const ON = {
+  issue: () => { pulse('lea', 'reg'); say('Léa locks 1 Ⓝ as a deposit'); },
+  issued: () => { setPts(6); P.lea.el.classList.remove('no'); say('Licence issued · 6 points on probation'); },
+  accept: () => { pulse('lea', 'plat'); say('Léa accepts a job on a platform'); },
+  ask: () => { pulse('plat', 'reg'); pulse('reg', 'plat', { delay: .9 }); say('The platform asks the registry: is Léa allowed?'); },
+  allowed: () => say('Allowed · job assigned'),
+  severe: () => { pulse('sam', 'plat'); say('Sam reports a lost parcel'); },
+  drop: () => { setPts(0); P.lea.el.classList.add('no'); say('0 points · licence suspended for 6 months', 1); },
+  refund: () => { pulse('reg', 'sam'); pulse('fund', 'sam', { delay: .35 }); say('Sam is refunded from the deposit and the fund'); },
+  lea2: () => { show('lea2', true); P.lea2.el.classList.remove('no'); pulse('lea2', 'reg', { stop: .62, color: RED }); say('Léa opens a fresh account'); },
+  refused: () => { P.lea2.el.classList.add('no'); say('Refused · same fingerprint, same record', 1); },
+  read: () => { pulse('reg', 'plat', { color: INK }); say('Anyone reads the licence · free, no gas'); },
+  restored: () => { setPts(6); show('lea2', false); P.lea.el.classList.remove('no'); say('6 months later · back on probation, deposit +25 %'); },
+  idle: () => {},
+};
+terminal(document.getElementById('log'), { max: 9, onLine: ev => (ON[ev] || ON.idle)() });
+
+const resize = () => { const w = box.clientWidth, h = box.clientHeight; r.setSize(w, h, false); cam.aspect = w / h;
+  cam.setViewOffset(w, h, 0, -h * .03, w, h); cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+const v = new THREE.Vector3(); let last = performance.now();
+const place = (el, p) => { v.copy(p).project(cam); el.style.left = ((v.x + 1) / 2 * box.clientWidth) + 'px'; el.style.top = ((1 - v.y) / 2 * box.clientHeight) + 'px'; };
+(function loop(now) {
+  now = now || performance.now();
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  const a = .62 + Math.sin(t * .12) * .1;
+  cam.position.set(Math.sin(a) * 12.2, 8.4, Math.cos(a) * 12.2); cam.lookAt(0, .3, .2);
+  cubes.forEach((c, i) => { c.on += (c.target - c.on) * Math.min(1, dt * (c.target ? 6 : 3.5) * (1 + i * .04));
+    c.fill.material.opacity = c.on * .85; c.w.material.color.setHex(c.on > .5 ? INK : GREY);
+    c.g.position.y = .78 - (1 - c.on) * .24; const s = .7 + .3 * c.on; c.g.scale.set(s, s, s); });
+  for (let i = pulses.length - 1; i >= 0; i--) { const p = pulses[i]; p.t += dt / .9;
+    if (p.t >= 0) { p.m.visible = true; const u = Math.min(p.t, p.stop); p.m.position.lerpVectors(p.a, p.b, u); p.m.rotation.y = t * 3; }
+    if (p.t > p.stop + .35) { scene.remove(p.m); pulses.splice(i, 1); } }
+  r.render(scene, cam);
+  for (const p of Object.values(P)) place(p.el, p.top);
+  place(regLabel, new THREE.Vector3(0, -.15, 1.9));
+  requestAnimationFrame(loop);
+})();
+
+</script>
 </body>
 </html>
