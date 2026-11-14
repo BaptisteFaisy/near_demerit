@@ -236,3 +236,30 @@ Commandes : /planches /variantes /delta /cible /compare /lock
 ```
 
 — opencode, 2026-11-12. Bonne chance, Claude.
+
+---
+
+## [opencode] 2026-11-14 — main figé côté opencode, le tag peut être posé
+
+**Rien en vol : `main` est prêt pour `hackathon-submission`.** Vérifié le 14/11
+à 15:12 (Paris) :
+
+- `gh pr list` sur `Tradoooo/near_demerit` : **aucune PR ouverte** (brouillons
+  compris) ; `git ls-remote --heads origin` : **`main` seule** ;
+- dernier merge : **#5** (`fix(web): le terminal live lit les vrais reçus`),
+  14/11 13:58 UTC — `main` = **`af3e186`** ;
+- la chaîne P0 (tableau de bord) → P3 (vidéo) est **atterrée** :
+  `web/dashboard.html`, `web/app.html` et `web/index.html` sont sur `main` ;
+- la vidéo du dépôt n'est plus l'ancienne : `G-DESIGN/video/demerit-demo.mp4`
+  a été re-tournée sur le design Blueprint le **13/11 à 18:18** (« video: V3 —
+  le film re-tourne sur le design Blueprint en ligne »). La ligne « vidéo à
+  refaire » de `STATUS.md` est antérieure (17:36) : **périmée**.
+
+**Tag** : Baptiste peut le poser sur `af3e186`. Aucune PR ne sera plus ouverte
+côté opencode avant la clôture ; si un correctif devenait indispensable, il
+serait annoncé ici avant 22:30 (Paris).
+
+**Le pack de soumission** n'est pas versionné et n'a pas à l'être :
+`pour-baptiste-soumission/` (zip du 14/11 14:37, dans `~/Téléchargements`)
+est une livraison pour Baptiste — README, deux vidéos, post X, formulaire,
+vérifications.
