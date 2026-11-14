@@ -61,9 +61,13 @@ const monthLabel = () => new Date(T0 + w.now * 1000).toLocaleDateString('en-GB',
 /* ---------- on-chain log ---------- */
 /* One formatter for every event, demo and live alike (web/events.js). */
 const EV = window.DemeritEvents;
+/* The sandbox terminal keeps 7 lines; the live feed reads four transactions,
+   so the window widens in live mode or the last call would erase the first. */
+const LOG_LINES = 7, LOG_LINES_LIVE = 14;
 function logLine(cls, html) {
   const ol = $('#log'), li = document.createElement('li'); li.className = 'new'; li.innerHTML = '<span class="' + cls + '">' + html + '</span>';
-  ol.appendChild(li); while (ol.children.length > 7) ol.removeChild(ol.firstChild);
+  ol.appendChild(li); const max = isLive() ? LOG_LINES_LIVE : LOG_LINES;
+  while (ol.children.length > max) ol.removeChild(ol.firstChild);
 }
 function call(signer, target, method, args, fn, opts = {}) {
   const before = w.log.length;
@@ -263,10 +267,12 @@ async function loadLive() {
 async function loadLiveTxs() {
   if (!isLive()) return;
   try {
-    const txs = await Txs.recent(6);
+    const txs = await Txs.recent(4);
     if (!txs.length) { logLine('m', '# no transaction to show yet on the two contracts'); return; }
-    logLine('m', '# the ' + txs.length + ' latest transactions of ' + REG + ' and ' + PF);
     txs.forEach(tx => Txs.lines(tx).forEach(l => logLine(l.cls, esc(l.text))));
+    /* The count is printed last: a line written before the rows would be
+       scrolled away by the very rows it announces. */
+    logLine('m', '# ' + txs.length + ' transactions read from ' + REG + ' · ' + PF + ' · explorer');
   } catch (e) {
     logLine('r', '  ✕ transactions unavailable: ' + esc((e && e.message) || String(e)));
   }

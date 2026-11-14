@@ -103,6 +103,17 @@ async function open(path, { width = 1440, height = 1000 } = {}) {
   net('app: la caution vient de testnet', /Ⓝ/.test(live));
   const badge = await page.$eval('#chainMode', (e) => e.textContent.trim()).catch(() => '');
   net('app: le bandeau terminal annonce le mode live', /live/.test(badge), badge);
+  /* Le terminal live affiche les vraies transactions des deux contrats :
+     l'en-tête, une hachage de 44 caractères, le lien d'explorer. Un test
+     unitaire ne peut pas le prouver — seul un vrai navigateur le fait. */
+  await page.waitForFunction(() => {
+    const l = document.querySelector('#log');
+    return l && /explorer\.testnet\.near\.org\/tx\//.test(l.textContent);
+  }, { timeout: 60000 }).catch(() => {});
+  const log = await page.$eval('#log', (e) => e.textContent).catch(() => '');
+  net('app: le terminal annonce les transactions des deux contrats', /transactions read from ledger\.demerit\.testnet · platform\.demerit\.testnet/.test(log), log.slice(-160));
+  net('app: une vraie hachage de transaction s\u2019affiche', /\/tx\/[1-9A-HJ-NP-Za-km-z]{44}/.test(log), log.slice(-160));
+  check('app: le terminal n\u2019\u00e9crit jamais "undefined"', !/undefined/.test(log), log.slice(0, 200));
   check('app: aucune erreur JavaScript', errors.length === 0, errors.join(' | '));
   await page.screenshot({ path: '/tmp/demerit-v28-app-live.png' });
   await page.close();
