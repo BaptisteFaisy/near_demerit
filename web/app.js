@@ -14,6 +14,7 @@ const esc = V.esc, N = V.N, BOX = V.BOX, PAGE = V.PAGE, ICON = V.ICON;
 const MODE_KEY = 'demerit.mode';
 const Live = window.DemeritLive;
 const Chain = window.DemeritChain;
+const Txs = window.DemeritTxs;
 const STATUS_EN = {
   probation: 'Probation', probatoire: 'Probation', actif: 'Active', active: 'Active', valide: 'Active',
   suspendu: 'Suspended', suspended: 'Suspended', revoque: 'Revoked', revoked: 'Revoked',
@@ -58,14 +59,8 @@ const date = s => new Date(T0 + s * 1000).toLocaleDateString('en-GB', { day: 'nu
 const monthLabel = () => new Date(T0 + w.now * 1000).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
 /* ---------- on-chain log ---------- */
-const EV = {
-  license_issued: e => 'license_issued · ' + e.holder + ' · ' + e.points + ' points', mission_posted: e => 'mission_posted · #' + e.id + ' · ' + N(e.reward) + ' Ⓝ in escrow',
-  mission_taken: e => 'mission_taken · #' + e.id, mission_closed: e => 'mission_closed · #' + e.id + ' · ' + e.outcome,
-  mission_recorded: e => 'mission_recorded', points_changed: e => 'points_changed · ' + e.before + ' → ' + e.after,
-  license_suspended: () => 'license_suspended · 6 months', bond_slashed: e => 'bond_slashed · ' + N(e.amount) + ' Ⓝ',
-  client_compensated: e => 'client_compensated · ' + N(e.amount) + ' Ⓝ → ' + e.client, bond_topped_up: e => 'bond_topped_up · ' + N(e.amount) + ' Ⓝ',
-  delegation_changed: e => 'delegation_changed · ' + e.delegate, withdrawn: e => 'withdrawn · ' + N(e.amount) + ' Ⓝ → ' + e.account, platform_approved: e => 'platform_approved · ' + e.account
-};
+/* One formatter for every event, demo and live alike (web/events.js). */
+const EV = window.DemeritEvents;
 function logLine(cls, html) {
   const ol = $('#log'), li = document.createElement('li'); li.className = 'new'; li.innerHTML = '<span class="' + cls + '">' + html + '</span>';
   ol.appendChild(li); while (ol.children.length > 7) ol.removeChild(ol.firstChild);
@@ -76,7 +71,7 @@ function call(signer, target, method, args, fn, opts = {}) {
   if (opts.xcc) logLine('x', '  ↳ cross-contract call: ' + REG + '.is_allowed(' + esc(signer) + ') · 10 Tgas · callback on_allowed');
   try {
     const v = fn();
-    for (const e of w.log.slice(before)) { const f = EV[e.ev]; logLine('e', '  EVENT ' + esc(f ? f(e.data || {}) : e.ev)); }
+    for (const e of w.log.slice(before)) { logLine('e', '  EVENT ' + esc(EV.format(e.ev, e.data))); }
     if (opts.xcc) logLine('o', '  ✓ is_allowed → true · mission assigned');
     else logLine('o', '  ✓ ok');
     refresh(); return { ok: true, v };
@@ -260,6 +255,21 @@ async function loadLive() {
     logLine('r', '  ✕ ' + esc(ui.chain.error));
   }
   ui.chain.loading = false; render();
+  loadLiveTxs();
+}
+
+/* The real transactions of the two contracts: hash, explorer link and the
+   events the contracts wrote. The page never signs, it only reads. */
+async function loadLiveTxs() {
+  if (!isLive()) return;
+  try {
+    const txs = await Txs.recent(6);
+    if (!txs.length) { logLine('m', '# no transaction to show yet on the two contracts'); return; }
+    logLine('m', '# the ' + txs.length + ' latest transactions of ' + REG + ' and ' + PF);
+    txs.forEach(tx => Txs.lines(tx).forEach(l => logLine(l.cls, esc(l.text))));
+  } catch (e) {
+    logLine('r', '  ✕ transactions unavailable: ' + esc((e && e.message) || String(e)));
+  }
 }
 
 function setMode(m) {

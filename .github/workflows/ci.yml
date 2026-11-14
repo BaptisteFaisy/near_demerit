@@ -45,6 +45,10 @@ jobs:
         run: cd web && node scripts/smoke.mjs
       - name: Actions module tests (CLI command + wallet link)
         run: cd web && node scripts/actions-test.mjs
+      - name: Event formatter tests (real testnet payloads)
+        run: cd web && node scripts/events-test.mjs
+      - name: Live transaction feed tests (real explorer v3 payloads)
+        run: cd web && node scripts/txs-test.mjs
       - name: Page test dependencies
         run: cd web && npm ci --no-audit --no-fund
       - name: Headless check of the three public pages (landing, app, dashboard)

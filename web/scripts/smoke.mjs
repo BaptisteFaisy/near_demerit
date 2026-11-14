@@ -79,6 +79,9 @@ try {
     ['/app.js', 'text/javascript'],
     ['/chain.js', 'text/javascript'],
     ['/live.js', 'text/javascript'],
+    ['/events.js', 'text/javascript'],
+    ['/explorer.js', 'text/javascript'],
+    ['/txs.js', 'text/javascript'],
     ['/views.js', 'text/javascript'],
     ['/moteur.js', 'text/javascript'],
     ['/common.js', 'text/javascript'],
@@ -103,7 +106,7 @@ try {
   check('app has no CDN reference', !/https?:\/\/(cdn|fonts\.googleapis|unpkg|cdnjs)/.test(app));
   check('three.js is vendored', landing.includes('"./vendor/three.module.js"'));
 
-  for (const file of ['app.js', 'chain.js', 'live.js', 'views.js', 'moteur.js', 'common.js', 'dashboard.js']) {
+  for (const file of ['app.js', 'chain.js', 'live.js', 'events.js', 'explorer.js', 'txs.js', 'views.js', 'moteur.js', 'common.js', 'dashboard.js']) {
     const source = await readFile(path.join(ROOT, file), 'utf8');
     check(`${file} passes node --check`, await checkSyntax(source));
   }
