@@ -53,6 +53,7 @@ button:disabled { opacity: .6; cursor: progress; }
 .hint { margin: .5rem 0 0; }
 .badge-row { display: flex; gap: .5rem; margin-bottom: .7rem; flex-wrap: wrap; }
 .badge { display: inline-block; padding: .2rem .65rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .85rem; text-transform: capitalize; }
+.badge[hidden] { display: none; }
 .badge[data-state="suspended"], .badge[data-state="revoked"], .badge-err { background: #fdecec; color: #8d2020; }
 .badge[data-state="probation"], .badge-warn { background: #fff3d9; color: var(--warn); }
 .badge-ok { background: #e6f4ea; color: var(--ok); }

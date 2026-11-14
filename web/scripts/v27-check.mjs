@@ -119,6 +119,42 @@ async function open(path, { width = 1440, height = 1000 } = {}) {
   await page.close();
 }
 
+/* ------------------------------------------------- licence demo : anti-boucle
+   La carte "Demo licences" est montée par un MutationObserver sur tout le
+   DOM : sans garde, chaque remplissage redéclenchait des lectures RPC. On
+   compte les POST hors localhost pendant 10 s pour prouver que la boucle est
+   fermée. */
+{
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1440, height: 1000 });
+  const errors = [];
+  /* Le RPC public rend des 429 sous charge : c'est un état réseau, pas
+     une erreur JavaScript, et le fichier admet déjà ce rate-limit
+     ailleurs. Une vraie boucle est de toute façon capturée par le
+     compteur de POST. */
+  const httpStatus = /Failed to load resource/;
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  page.on('console', (m) => { if (m.type() === 'error' && !httpStatus.test(m.text())) errors.push('console: ' + m.text()); });
+  let posts = 0;
+  page.on('request', (r) => {
+    if (r.method() !== 'POST') return;
+    let host = '';
+    try { host = new URL(r.url()).hostname; } catch { return; }
+    if (host === '127.0.0.1' || host === 'localhost') return;
+    posts++;
+  });
+  await page.goto(BASE + '/app.html#/licence', { waitUntil: 'load', timeout: 60000 });
+  await page.waitForSelector('#demoLicences', { timeout: 20000 }).catch(() => {});
+  const card = await page.$eval('#demoLicences', (e) => e.innerText).catch(() => '');
+  const before = posts;
+  await new Promise((r) => setTimeout(r, 10000));
+  const delta = posts - before;
+  check('licence demo: la carte Demo licences est montée', card.includes('Demo licences'), card.slice(0, 60));
+  check('licence demo: aucune boucle RPC (10 POST max en 10 s)', delta <= 10, delta + ' POST hors localhost');
+  check('licence demo: aucune erreur JavaScript', errors.length === 0, errors.join(' | '));
+  await page.close();
+}
+
 /* -------------------------------------------------------------- dashboard */
 {
   const { page, errors } = await open('/dashboard.html');
