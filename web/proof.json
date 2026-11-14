@@ -1,0 +1,243 @@
+{
+  "generatedBy": "web/scripts/proof-summary.mjs",
+  "generatedAt": "2026-11-14T14:32:22.764Z",
+  "invariantI2": "Σ bonds + fund + Σ credits + missions in progress = Σ deposits − Σ withdrawals",
+  "runs": {
+    "unit": {
+      "command": "cargo test -p demerit",
+      "host": "debian",
+      "started": "2026-11-14T14:19:56Z",
+      "ended": "2026-11-14T14:21:38Z",
+      "exit": 0,
+      "log": "docs/proof/cargo-test-demerit-20261114.txt",
+      "missing": false,
+      "passed": 18,
+      "failed": 0,
+      "ignored": 0,
+      "suites": 2,
+      "tests": [
+        "rules::tests::coefficient_moves_both_ways_and_bond_follows",
+        "rules::tests::cap_grows_two_points_per_clean_year",
+        "rules::tests::fresh_licence_is_probationary_at_six_points",
+        "rules::tests::full_regeneration_after_two_clean_years",
+        "rules::tests::next_regen_is_zero_when_at_the_ceiling",
+        "rules::tests::scale_table_losses_and_regeneration",
+        "rules::tests::suspension_ends_in_probation_with_six_points",
+        "tests::a_new_licence_is_probationary_at_six_points",
+        "tests::a_licence_never_moves",
+        "tests::one_live_licence_per_identity_and_the_dossier_follows_it",
+        "tests::the_token_title_shows_todays_points_without_a_transaction",
+        "tests::a_severe_report_zeroes_the_licence_suspends_it_and_pays_the_client",
+        "tests::an_identity_under_suspension_is_refused_with_its_own_code",
+        "tests::a_delegate_acts_under_the_holders_licence_until_it_expires",
+        "tests::a_won_contest_gives_the_points_back_and_strikes_the_platform",
+        "tests::a_mission_is_recorded_once_per_platform_and_only_by_an_approved_one",
+        "tests::the_suspension_ends_in_probation_and_the_bond_is_due_again",
+        "tests::a_medium_report_costs_three_points_and_a_clean_year_gives_one_back"
+      ],
+      "ok": true
+    },
+    "demo": {
+      "command": "make demo",
+      "host": "debian",
+      "started": "2026-11-14T14:21:38Z",
+      "ended": "2026-11-14T14:27:58Z",
+      "exit": 0,
+      "log": "docs/proof/make-demo-20261114.txt",
+      "missing": false,
+      "line": "DEMO OK (10/10)",
+      "ok": true,
+      "score": "10/10",
+      "rows": [
+        {
+          "label": "1 issue(lea, 1 NEAR)",
+          "expected": "6 pts, probation, demerit-1, caution 1 NEAR",
+          "got": "6 pts · probation · jeton demerit-1 · caution 1.0000 NEAR · exigée 1.0000 NEAR",
+          "ok": true
+        },
+        {
+          "label": "2 close clean",
+          "expected": "missions_ok = 1, 6 pts",
+          "got": "missions_ok=1 · 6 pts · mission 1 close",
+          "ok": true
+        },
+        {
+          "label": "3 close medium",
+          "expected": "3 pts",
+          "got": "3 pts · invalidations=0",
+          "ok": true
+        },
+        {
+          "label": "4 +6 mois (12 s)",
+          "expected": "4 pts : régénération",
+          "got": "4 pts",
+          "ok": true
+        },
+        {
+          "label": "5 close severe",
+          "expected": "0 pt, suspension 6 mois, fonds +0,20, client +0,20, coef 125",
+          "got": "0 pts suspendu · suspension 12 s · fonds +0.2000 NEAR · client +0.2000 NEAR · coef 125 · invalidations=1",
+          "ok": true
+        },
+        {
+          "label": "6 accept sous suspension",
+          "expected": "refus ERR_LICENSE_SUSPENDED",
+          "got": "état=open accept=ERR_LICENSE_REFUSED registre=ERR_LICENSE_SUSPENDED",
+          "ok": true
+        },
+        {
+          "label": "7 lea2, même empreinte",
+          "expected": "refus ERR_IDENTITY_SUSPENDED",
+          "got": "code ERR_IDENTITY_SUSPENDED",
+          "ok": true
+        },
+        {
+          "label": "8 réhabilitation, caution",
+          "expected": "6 pts probation, inval. 1, sous-garanti refusé puis accepté",
+          "got": "6 pts probation · invalidations=1 · sous-garanti 0.6000 NEAR < 1.2500 NEAR · 1er accept: état=open accept=ERR_LICENSE_REFUSED registre=ERR_UNDER_BONDED · 2e accept: état=taken · caution 1.2500 NEAR = exigée 1.2500 NEAR",
+          "ok": true
+        },
+        {
+          "label": "9 nft_transfer",
+          "expected": "refus ERR_SOULBOUND",
+          "got": "code ERR_SOULBOUND",
+          "ok": true
+        },
+        {
+          "label": "I2 conservation",
+          "expected": "équilibré après chaque étape (9)",
+          "got": "9/9 étapes équilibrées",
+          "ok": true
+        }
+      ],
+      "funds": "funds: fonds 0.2000 NEAR + cautions et crédits 1.2500 NEAR + missions 0.0000 NEAR = 1.4500 NEAR | versements 1.6500 NEAR - retraits 0.2000 NEAR = 1.4500 NEAR -> OK",
+      "invariant": {
+        "label": "I2 conservation",
+        "expected": "équilibré après chaque étape (9)",
+        "got": "9/9 étapes équilibrées",
+        "ok": true
+      }
+    },
+    "attack": {
+      "command": "make attack",
+      "host": "debian",
+      "started": "2026-11-14T14:27:58Z",
+      "ended": "2026-11-14T14:28:35Z",
+      "exit": 0,
+      "log": "docs/proof/make-attack-20261114.txt",
+      "missing": false,
+      "line": "ATTACK OK (7/7)",
+      "ok": true,
+      "score": "7/7",
+      "refusals": [
+        {
+          "label": "un compte non agréé enregistre une mission",
+          "expected": "ERR_NOT_PLATFORM",
+          "got": "code ERR_NOT_PLATFORM",
+          "ok": true
+        },
+        {
+          "label": "la même mission est enregistrée deux fois",
+          "expected": "ERR_MISSION_ALREADY_RECORDED",
+          "got": "code ERR_MISSION_ALREADY_RECORDED",
+          "ok": true
+        },
+        {
+          "label": "un second permis pour une empreinte déjà titulaire",
+          "expected": "ERR_IDENTITY_ALREADY_LICENSED",
+          "got": "code ERR_IDENTITY_ALREADY_LICENSED",
+          "ok": true
+        },
+        {
+          "label": "le titulaire transfère son permis",
+          "expected": "ERR_SOULBOUND",
+          "got": "code ERR_SOULBOUND",
+          "ok": true
+        },
+        {
+          "label": "un délégué révoqué accepte une mission",
+          "expected": "refus ERR_DELEGATION_EXPIRED",
+          "got": "état=open accept=ERR_LICENSE_REFUSED registre=ERR_DELEGATION_EXPIRED",
+          "ok": true
+        },
+        {
+          "label": "une plateforme suspendue enregistre une mission",
+          "expected": "ERR_PLATFORM_SUSPENDED",
+          "got": "agrément actif=false · code ERR_PLATFORM_SUSPENDED",
+          "ok": true
+        },
+        {
+          "label": "le titulaire retire sa caution sous le montant exigé",
+          "expected": "ERR_UNDER_BONDED",
+          "got": "sous-garanti 0.6000 NEAR < 1.2500 NEAR · code ERR_UNDER_BONDED",
+          "ok": true
+        }
+      ]
+    },
+    "sim": {
+      "command": "make sim",
+      "host": "debian",
+      "started": "2026-11-14T14:28:35Z",
+      "ended": "2026-11-14T14:28:36Z",
+      "exit": 0,
+      "log": "docs/proof/make-sim-20261114.txt",
+      "missing": false,
+      "line": "SIM OK (5/5)",
+      "ok": true,
+      "score": "5/5",
+      "rows": [
+        {
+          "robot": "fiable",
+          "points": "10",
+          "cap": "10",
+          "suspensions": "0",
+          "coefficient": "90",
+          "bond": "1.0000 N",
+          "expected": "au plafond, coefficient < 1, excédent retirable",
+          "ok": true
+        },
+        {
+          "robot": "moyen",
+          "points": "10 (10–12)",
+          "cap": "12",
+          "suspensions": "0",
+          "coefficient": "100",
+          "bond": "1.0000 N",
+          "expected": "oscille entre 9 et 12, jamais suspendu",
+          "ok": true
+        },
+        {
+          "robot": "négligent",
+          "points": "0",
+          "cap": "6",
+          "suspensions": "31",
+          "coefficient": "100",
+          "bond": "1.0000 N",
+          "expected": "suspendu au moins une fois",
+          "ok": true
+        },
+        {
+          "robot": "fraudeur (2e compte)",
+          "points": "6",
+          "cap": "6",
+          "suspensions": "1",
+          "coefficient": "125",
+          "bond": "1.2500 N",
+          "expected": "hérite du casier et paie une caution plus chère",
+          "ok": true
+        },
+        {
+          "robot": "plateforme abusive",
+          "points": "—",
+          "cap": "—",
+          "suspensions": "3 avert.",
+          "coefficient": "—",
+          "bond": "suspendue",
+          "expected": "agrément suspendu au troisième avertissement",
+          "ok": true
+        }
+      ],
+      "funds": "fonds: caution 4.8500 N + garantie 0.2000 N + indemnités 0.2000 N = 5.2500 N | versements 5.2500 N -> OK"
+    }
+  }
+}

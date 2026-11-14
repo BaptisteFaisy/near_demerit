@@ -1,0 +1,18 @@
+=== make sim ===
+command : make sim
+host    : debian
+cwd     : /home/baptiste/src/nd-proof
+started : 2026-11-14T14:28:35Z
+--- begin output ---
+cargo run -p demo --bin sim --quiet
+robot                  points         plaf. suspensions coef   caution      attendu                                    verdict
+fiable                 10             10    0           90     1.0000 N     au plafond, coefficient < 1, excédent retirable OK
+moyen                  10 (10–12)     12    0           100    1.0000 N     oscille entre 9 et 12, jamais suspendu     OK
+négligent              0              6     31          100    1.0000 N     suspendu au moins une fois                 OK
+fraudeur (2e compte)   6              6     1           125    1.2500 N     hérite du casier et paie une caution plus chère OK
+plateforme abusive     —              —     3 avert.    —      suspendue    agrément suspendu au troisième avertissement OK
+fonds: caution 4.8500 N + garantie 0.2000 N + indemnités 0.2000 N = 5.2500 N | versements 5.2500 N -> OK
+SIM OK (5/5)
+--- end output ---
+ended   : 2026-11-14T14:28:36Z
+EXIT 0

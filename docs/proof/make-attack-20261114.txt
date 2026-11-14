@@ -1,0 +1,23 @@
+=== make attack ===
+command : make attack
+host    : debian
+cwd     : /home/baptiste/src/nd-proof
+started : 2026-11-14T14:27:58Z
+--- begin output ---
+RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release -p demerit -p missions
+    Finished `release` profile [optimized] target(s) in 8.48s
+BUILD OK
+cargo run -p demo --bin attack --quiet
+step                                                  | expected                      | got                                                                   | verdict
+------------------------------------------------------+-------------------------------+-----------------------------------------------------------------------+-------
+un compte non agréé enregistre une mission            | ERR_NOT_PLATFORM              | code ERR_NOT_PLATFORM                                                 | OK
+la même mission est enregistrée deux fois             | ERR_MISSION_ALREADY_RECORDED  | code ERR_MISSION_ALREADY_RECORDED                                     | OK
+un second permis pour une empreinte déjà titulaire    | ERR_IDENTITY_ALREADY_LICENSED | code ERR_IDENTITY_ALREADY_LICENSED                                    | OK
+le titulaire transfère son permis                     | ERR_SOULBOUND                 | code ERR_SOULBOUND                                                    | OK
+un délégué révoqué accepte une mission                | refus ERR_DELEGATION_EXPIRED  | état=open accept=ERR_LICENSE_REFUSED registre=ERR_DELEGATION_EXPIRED  | OK
+une plateforme suspendue enregistre une mission       | ERR_PLATFORM_SUSPENDED        | agrément actif=false · code ERR_PLATFORM_SUSPENDED                    | OK
+le titulaire retire sa caution sous le montant exigé  | ERR_UNDER_BONDED              | sous-garanti 0.6000 NEAR < 1.2500 NEAR · code ERR_UNDER_BONDED        | OK
+ATTACK OK (7/7)
+--- end output ---
+ended   : 2026-11-14T14:28:35Z
+EXIT 0
