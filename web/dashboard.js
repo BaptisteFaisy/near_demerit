@@ -357,7 +357,7 @@
     }
   }
   function setupHolderActions(holder, category) {
-    var c = cfg.contract, h = holder || 'lea.testnet', cat = category || cfg.category;
+    var c = cfg.contract, h = holder || 'lea.demerit.testnet', cat = category || cfg.category;
     bindAction('act-topup', { contract: c, method: 'top_up_bond', args: { category: cat }, deposit: '1', signer: h, label: 'top_up_bond (compléter caution)', hint: 'Recharge la caution au niveau requis.' });
     bindAction('act-withdrawecess', { contract: c, method: 'withdraw_bond_excess', args: { category: cat }, signer: h, label: 'withdraw_bond_excess (retirer excédent)', hint: 'Retire la caution au-delà du montant requis.' });
     bindAction('act-delegate', { contract: c, method: 'delegate', args: { category: cat, delegate: 'agent1.' + h, expires_at: '1790000000000000000' }, signer: h, label: 'delegate (déléguer permis)', hint: 'Ouvre une délégation pour un sous-compte.' });
@@ -373,11 +373,11 @@
     bindAction('act-post', { contract: m, method: 'post', args: { reward: '1000000000000000000000000' }, deposit: '1', label: 'post (publier mission)', hint: 'Publie une tâche avec récompense sous séquestre.' });
     bindAction('act-accept', { contract: m, method: 'accept', args: { mission_id: 1 }, label: 'accept (accepter mission)', hint: 'Vérifie is_allowed et attribue le travail.' });
     bindAction('act-close', { contract: m, method: 'close', args: { mission_id: 1, outcome: 'clean' }, label: 'close (clôturer mission)', hint: 'Clôture, paie le worker et enregistre l\'issue.' });
-    bindAction('act-issue', { contract: c, method: 'issue', args: { account: 'lea.testnet', category: cat, identity: 'fp-hex' }, deposit: '1', label: 'issue (délivrer permis)', hint: 'Émet un permis probatoire avec caution.' });
+    bindAction('act-issue', { contract: c, method: 'issue', args: { account: 'lea.demerit.testnet', category: cat, identity: 'fp-hex' }, deposit: '1', label: 'issue (délivrer permis)', hint: 'Émet un permis probatoire avec caution.' });
     bindAction('act-approveplatform', { contract: c, method: 'approve_platform', args: { category: cat, account: m || 'missions.testnet' }, label: 'approve_platform (agréer)', hint: 'Agrée une plateforme partenaire.' });
     bindAction('act-resolvecontest', { contract: c, method: 'resolve_contest', args: { category: cat, mission_id: 'm-1', upheld: true }, label: 'resolve_contest (arbitrer recours)', hint: 'Maintient ou infirme le signalement.' });
     bindAction('act-strikeplatform', { contract: c, method: 'strike_platform', args: { account: m || 'missions.testnet' }, label: 'strike_platform (sanctionner)', hint: 'Avertissement officiel à une plateforme.' });
-    bindAction('act-revokelicense', { contract: c, method: 'revoke_license', args: { account: 'lea.testnet', category: cat, reason: 'fraude' }, label: 'revoke_license (révoquer)', hint: 'Révocation définitive pour motif grave.' });
+    bindAction('act-revokelicense', { contract: c, method: 'revoke_license', args: { account: 'lea.demerit.testnet', category: cat, reason: 'fraude' }, label: 'revoke_license (révoquer)', hint: 'Révocation définitive pour motif grave.' });
   }
 
   /* ------------------------------------------------------------- Initial Boot */
@@ -409,7 +409,7 @@
       $('notice').textContent = 'Mode hors-ligne / non configuré : le contrat Demerit n\'est pas spécifié dans config.js. Utilisez ?contract=...&missions=...&rpc=... pour connecter un déploiement réel. Toutes les vues restent interactives et le scénario ci-dessous affiche les résultats attendus.';
     }
     initListeners();
-    setupHolderActions('lea.testnet', cfg.category);
+    setupHolderActions('lea.demerit.testnet', cfg.category);
     setupGlobalActions();
     loadCategoriesAndRules();
     loadMissions();

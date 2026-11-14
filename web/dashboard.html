@@ -36,7 +36,7 @@
       <div class="sec-head"><h2 id="h-consult">1. Consultation publique</h2><button id="consultRefresh" type="button" class="btn-sm">Rafraîchir</button></div>
       <form id="lookupForm" class="card form">
         <div class="row">
-          <div class="field"><label for="account">Compte NEAR</label><input id="account" name="account" type="text" autocomplete="off" placeholder="lea.testnet" spellcheck="false" required></div>
+          <div class="field"><label for="account">Compte NEAR</label><input id="account" name="account" type="text" autocomplete="off" placeholder="lea.demerit.testnet" spellcheck="false" required></div>
           <div class="field"><label for="category">Catégorie</label><input id="category" name="category" type="text" list="categoryList" placeholder="coursier" autocomplete="off" spellcheck="false"><datalist id="categoryList"></datalist></div>
           <div class="field field-action"><button id="submitBtn" type="submit">Consulter</button></div>
         </div>
@@ -87,7 +87,7 @@
       <form id="checkForm" class="card form">
         <p class="hint">Simule la vérification qu'un contrat tiers ou une plateforme appelle avant d'attribuer une mission.</p>
         <div class="row">
-          <div class="field"><label for="chkAccount">Compte ou délégué</label><input id="chkAccount" type="text" placeholder="lea.testnet" required></div>
+          <div class="field"><label for="chkAccount">Compte ou délégué</label><input id="chkAccount" type="text" placeholder="lea.demerit.testnet" required></div>
           <div class="field"><label for="chkCategory">Catégorie</label><input id="chkCategory" type="text" placeholder="coursier" value="coursier" required></div>
           <div class="field"><label for="chkMinPoints">Points min.</label><input id="chkMinPoints" type="number" min="0" max="12" value="9"></div>
           <div class="field"><label for="chkMinMissions">Missions min.</label><input id="chkMinMissions" type="number" min="0" value="5"></div>
@@ -145,7 +145,7 @@
       <div class="card">
         <h3>Délégation active (vue <code>delegation</code>)</h3>
         <form id="delegationForm" class="row row-tight">
-          <div class="field"><label for="delDelegate">Compte du délégué</label><input id="delDelegate" type="text" placeholder="agent1.lea.testnet"></div>
+          <div class="field"><label for="delDelegate">Compte du délégué</label><input id="delDelegate" type="text" placeholder="agent1.lea.demerit.testnet"></div>
           <div class="field"><label for="delCategory">Catégorie</label><input id="delCategory" type="text" placeholder="coursier" value="coursier"></div>
           <div class="field field-action"><button type="submit" class="btn-sm">Consulter</button></div>
         </form>
