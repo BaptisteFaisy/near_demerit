@@ -4,6 +4,11 @@ Reputation you can lose, not sell.
 
 NEAR Hackathon 2026 — Ticket 10 "NFTs That Do Something" (Deadline: Nov 14, 2026, 23:59 UTC).
 
+> **Second entry by the same author — [Bankkeeper](https://github.com/Tradoooo/bankkeeper)** (a
+> shared-stock fishing-port economy game on NEAR, track *Games With Real Economies*, playable in the
+> browser at <https://tidewater-play.vercel.app>). Two independent projects, one builder: the NEAR
+> Hackathon lets one person enter up to two projects, provided each README names the other one.
+
 ## Live on testnet
 
 - **Public page**: https://near-demerit.vercel.app — the product front page: the promise in one
