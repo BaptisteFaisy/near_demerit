@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>demerit — Proof</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111'/%3E%3Cpath d='M16 6l10 10-10 10-10-10z' fill='%233a2bff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<style>
+#proof{min-height:100vh;display:flex;flex-direction:column;max-width:1440px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line);background:var(--bg)}
+#proof>.wrap{flex:1;overflow:auto;padding:26px 30px 40px;display:flex;flex-direction:column;gap:22px}
+.h{display:flex;align-items:flex-end;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.h h1{margin:0;font:500 32px/1.05 var(--mono);letter-spacing:-.045em}
+.h p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.h .sp{flex:1}
+.sec>h2{margin:0 0 12px;font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--ink);background:var(--paper);box-shadow:8px 8px 0 var(--hl)}
+.tile{padding:18px 20px;border-right:1px solid var(--line);position:relative}
+.tile:last-child{border-right:0}
+.tile small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.tile b{display:block;font:800 40px/1.05 var(--mono);letter-spacing:-.06em;margin-top:8px}
+.tile b span{font:500 15px var(--mono);color:var(--muted);letter-spacing:0}
+.tile .cmd{margin:10px 0 0;padding:0;background:none;color:var(--ink2);font:400 12px/1.4 var(--mono);white-space:normal}
+.tile.bad b{color:var(--no)}
+.tile.good::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--accent)}
+table{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--line);font-size:13.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--ink2)}
+tbody tr:last-child td{border-bottom:0}
+td.num{width:44px;color:var(--muted);text-align:right;font-weight:700}
+td.code{width:280px;font:700 12.5px var(--mono);color:var(--accent);white-space:nowrap}
+td.verdict{width:80px}
+td.raw{font:400 12.5px var(--mono);color:var(--ink2);word-break:break-word}
+tr.bad td{background:var(--no-bg)}
+.v{display:inline-block;font:700 11px var(--mono);padding:2px 8px;border:1px solid}
+.v.ok{color:var(--ok);border-color:var(--ok);background:var(--ok-bg)}
+.v.ko{color:var(--no);border-color:var(--no);background:var(--no-bg)}
+.inv{margin-top:14px;padding:16px 18px;border:1px solid var(--accent);background:var(--accent-bg);color:#1f168f}
+.inv b{display:block;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.inv p{margin:0;font-size:13.5px}
+.inv .eq{display:block;margin-top:8px;font:700 13px var(--mono);word-break:break-all}
+.prov{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:1px solid var(--line);background:var(--paper)}
+.prov>div{padding:14px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:13px}
+.prov>div:nth-child(2n){border-right:0}
+.prov b{display:block;font:700 12.5px var(--mono);color:var(--ink)}
+.prov a{color:var(--accent)}
+.prov span{color:var(--muted);font:400 12px var(--mono)}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.back{font:500 12px var(--mono);color:var(--ink2);text-decoration:none;border:1px solid var(--line2);padding:6px 12px;background:var(--paper)}
+.back:hover{background:var(--accent-bg);border-color:var(--accent)}
+@media (max-width:980px){.tiles{grid-template-columns:repeat(2,1fr)}.prov{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="proof">
+  <header class="top">
+    <a class="brand" href="index.html" aria-label="demerit home">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".25"/><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6.5V2M26.75 8.31L29 4.41M31.69 13.25L35.59 11M33.5 20H38M31.69 26.75L35.59 29M26.75 31.69L29 35.59M20 33.5V38M13.25 31.69L11 35.59M8.31 26.75L4.41 29M6.5 20H2M8.31 13.25L4.41 11M13.25 8.31L11 4.41"/></g><path d="M20 11l6.8 9-6.8 9-6.8-9z" fill="var(--accent)"/></svg>
+      <span>demerit</span>
+    </a>
+    <p class="tagline">Proof · the runs behind the claims</p>
+    <span class="sp"></span>
+    <a class="back" href="app.html">back to the app</a>
+  </header>
+
+  <div class="wrap" id="wrap">
+    <div class="ban info" id="loading"><div><b>Loading the proof</b>Reading web/proof.json, generated from the raw logs in docs/proof/.</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const wrap = document.getElementById('wrap');
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const V = (ok) => `<span class="v ${ok ? 'ok' : 'ko'}">${ok ? 'OK' : 'KO'}</span>`;
+
+  const fail = (title, detail) => {
+    wrap.innerHTML = `<div class="ban no"><div><b>${esc(title)}</b>${esc(detail)}</div></div>`;
+  };
+
+  fetch('proof.json', { cache: 'no-store' })
+    .then((r) => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(render)
+    .catch((e) => fail('Proof unavailable', 'web/proof.json could not be read (' + e.message + '). Regenerate it with node scripts/proof-summary.mjs from docs/proof/.'));
+
+  function render(p) {
+    const runs = p.runs || {};
+    const unit = runs.unit || {}, demo = runs.demo || {}, attack = runs.attack || {}, sim = runs.sim || {};
+    const tiles = [
+      { t: 'unit tests', ok: unit.ok === true, big: `${unit.passed ?? 0}<span> passed</span>`, cmd: unit.command, extra: `${unit.failed ?? 0} failed · ${unit.suites ?? 0} suite(s)` },
+      { t: 'make demo', ok: demo.ok === true, big: esc(demo.score ?? '—'), cmd: demo.command, extra: esc(demo.line ?? 'no DEMO verdict in the log') },
+      { t: 'make attack', ok: attack.ok === true, big: esc(attack.score ?? '—'), cmd: attack.command, extra: `${(attack.refusals || []).length} refusals, each with its code` },
+      { t: 'make sim', ok: sim.ok === true, big: esc(sim.score ?? '—'), cmd: sim.command, extra: 'invariant I2 on the money' },
+    ];
+
+    const rows = (list, cols) => list.map((r, i) => `<tr>${cols(r, i)}</tr>`).join('');
+
+    const attackTable = (attack.refusals || []).length
+      ? `<table><thead><tr><th class="num">#</th><th>Attack</th><th>Expected refusal</th><th>Code actually returned</th><th>Verdict</th></tr></thead><tbody>${
+          rows(attack.refusals, (r, i) =>
+            `<td class="num">${i + 1}</td><td>${esc(r.label)}</td><td class="code">${esc(r.expected)}</td><td class="raw">${esc(r.got)}</td><td class="verdict">${V(r.ok)}</td>`)
+        }</tbody></table>`
+      : `<div class="ban no"><div><b>No refusal rows</b>docs/proof/${esc((attack.log || '').split('/').pop())} has no parsed attack table.</div></div>`;
+
+    const simTable = (sim.rows || []).length
+      ? `<table><thead><tr><th class="num">#</th><th>Robot</th><th>Points</th><th>Cap</th><th>Suspensions</th><th>Coef.</th><th>Bond</th><th>Expected</th><th>Verdict</th></tr></thead><tbody>${
+          rows(sim.rows, (r, i) =>
+            `<td class="num">${i + 1}</td><td>${esc(r.robot)}</td><td class="raw">${esc(r.points)}</td><td class="raw">${esc(r.cap)}</td><td class="raw">${esc(r.suspensions)}</td><td class="raw">${esc(r.coefficient)}</td><td class="raw">${esc(r.bond)}</td><td>${esc(r.expected)}</td><td class="verdict">${V(r.ok)}</td>`)
+        }</tbody></table>`
+      : '';
+
+    const demoTable = (demo.rows || []).length
+      ? `<table><thead><tr><th class="num">#</th><th>Step</th><th>Expected</th><th>Observed</th><th>Verdict</th></tr></thead><tbody>${
+          rows(demo.rows, (r, i) =>
+            `<td class="num">${i + 1}</td><td>${esc(r.label)}</td><td class="raw">${esc(r.expected)}</td><td class="raw">${esc(r.got)}</td><td class="verdict">${V(r.ok)}</td>`)
+        }</tbody></table>`
+      : '';
+
+    const unitList = (unit.tests || []).length
+      ? `<details><summary class="note">${unit.tests.length} unit tests, as named in the log</summary><table><tbody>${
+          rows(unit.tests, (n, i) => `<tr><td class="num">${i + 1}</td><td class="raw">${esc(n)}</td><td class="verdict">${V(true)}</td></tr>`)
+        }</tbody></table></details>`
+      : '';
+
+    const prov = ['unit', 'demo', 'attack', 'sim'].map((k) => {
+      const r = runs[k] || {};
+      const bad = r.exit !== 0 || r.missing;
+      return `<div><b>${esc(r.command ?? k)} ${V(!bad)}</b><span>log <a href="${esc(r.log ?? '')}">${esc(r.log ?? 'missing')}</a> · started ${esc(r.started ?? '—')} · ended ${esc(r.ended ?? '—')} · exit ${esc(r.exit ?? '—')}</span></div>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="h"><div><h1>Proof</h1><p>Four commands, run for real, output kept verbatim. Every figure below is parsed from those logs by <span class="mono">web/scripts/proof-summary.mjs</span> — none of it is typed by hand.</p></div><span class="sp"></span></div>
+
+      <section class="sec"><div class="tiles">${tiles.map((x) => `
+        <div class="tile ${x.ok ? 'good' : 'bad'}"><small>${esc(x.t)}</small><b>${x.big}</b><p class="cmd">${esc(x.cmd ?? '')}</p><p class="note">${esc(x.extra ?? '')}</p></div>`).join('')}
+      </div></section>
+
+      <section class="sec"><h2>make attack · the seven refusals</h2>${attackTable}</section>
+
+      <section class="sec"><h2>make sim · five robots, invariant I2</h2>${simTable}
+        <div class="inv"><b>Invariant I2 · money conservation</b><p>${esc(p.invariantI2 ?? '')}</p><span class="eq">${esc(sim.funds ?? 'no funds line in the sim log')}</span></div>
+        <p class="note">Verdict: ${esc(sim.line ?? '—')} — exit ${esc(sim.exit ?? '—')}.</p></section>
+
+      <section class="sec"><h2>make demo · the nine steps of the spec</h2>${demoTable}
+        <div class="inv"><b>Invariant I2 · re-checked after every step</b><span class="eq">${esc(demo.funds ?? 'no funds line in the demo log')}</span></div>
+        <p class="note">Verdict: ${esc(demo.line ?? '—')} — exit ${esc(demo.exit ?? '—')}.</p></section>
+
+      <section class="sec"><h2>Unit tests · cargo test -p demerit</h2>
+        <p class="note">${esc(unit.passed ?? 0)} passed, ${esc(unit.failed ?? 0)} failed, ${esc(unit.ignored ?? 0)} ignored, across ${esc(unit.suites ?? 0)} suite(s).</p>
+        ${unitList}</section>
+
+      <section class="sec"><h2>Provenance</h2><div class="prov">${prov}</div>
+        <p class="note">Generated ${esc(p.generatedAt ?? '')} by ${esc(p.generatedBy ?? '')}. Read-only page: it changes nothing and calls no network.</p></section>`;
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+=== make demo ===
+command : make demo
+host    : debian
+cwd     : /home/baptiste/src/nd-proof
+started : 2026-11-14T14:21:38Z
+--- begin output ---
+RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release -p demerit -p missions
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling ident_case v1.0.1
+   Compiling winnow v1.0.5
+   Compiling zmij v1.0.23
+   Compiling hashbrown v0.17.1
+   Compiling equivalent v1.0.3
+   Compiling serde_core v1.0.229
+   Compiling toml_datetime v1.1.3+spec-1.1.0
+   Compiling cfg_aliases v0.2.2
+   Compiling borsh v1.8.1
+   Compiling strsim v0.11.1
+   Compiling once_cell v1.21.4
+   Compiling serde v1.0.229
+   Compiling typenum v1.20.1
+   Compiling serde_json v1.0.154
+   Compiling syn v3.0.10
+   Compiling syn v2.0.119
+   Compiling toml_parser v1.1.5+spec-1.1.0
+   Compiling indexmap v2.14.2
+   Compiling proc-macro-error-attr3 v3.1.1
+   Compiling proc-macro-error3 v3.1.1
+   Compiling toml_edit v0.25.19+spec-1.1.0
+   Compiling hybrid-array v0.4.15
+   Compiling near-sys v0.4.1
+   Compiling rustversion v1.0.23
+   Compiling foldhash v0.2.0
+   Compiling memchr v2.8.3
+   Compiling fnv v1.0.7
+   Compiling itoa v1.0.19
+   Compiling near-sdk-env v0.1.9
+   Compiling proc-macro-crate v3.5.0
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling base64 v0.23.1
+   Compiling hex v0.4.3
+   Compiling bs58 v0.5.1
+   Compiling heck v0.5.0
+   Compiling digest v0.11.3
+   Compiling near-sdk-macros v5.30.1
+   Compiling base64 v0.22.1
+   Compiling impl-tools-lib v0.12.0
+   Compiling darling_core v0.24.1
+   Compiling darling_core v0.20.11
+   Compiling near-crypto-hash v0.2.0
+   Compiling wee_alloc v0.4.5
+   Compiling memory_units v0.4.0
+   Compiling Inflector v0.11.4
+   Compiling strum v0.26.3
+   Compiling cfg-if v0.1.10
+   Compiling hex-literal v1.1.0
+   Compiling impl-tools v0.12.0
+   Compiling cfg_eval v0.1.2
+   Compiling serde_derive v1.0.229
+   Compiling borsh-derive v1.8.1
+   Compiling strum_macros v0.26.4
+   Compiling near-digest v0.1.5
+   Compiling darling_macro v0.20.11
+   Compiling darling_macro v0.24.1
+   Compiling darling v0.20.11
+   Compiling darling v0.24.1
+   Compiling serde_with_macros v3.24.0
+   Compiling serde_with v3.24.0
+   Compiling near-account-id v3.0.0
+   Compiling near-token v0.3.6
+   Compiling near-gas v0.3.7
+   Compiling near-sdk-core v4.4.2
+   Compiling near-global-contracts v0.3.3
+   Compiling near-sdk v5.30.1
+   Compiling missions v0.1.0 (/home/baptiste/src/nd-proof/contracts/missions)
+   Compiling demerit v0.1.0 (/home/baptiste/src/nd-proof/contracts/demerit)
+    Finished `release` profile [optimized] target(s) in 22.36s
+BUILD OK
+cargo run -p demo --quiet
+step                       | expected                                                      | got                                                                                                                                                                                                                                | verdict
+---------------------------+---------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------
+1 issue(lea, 1 NEAR)       | 6 pts, probation, demerit-1, caution 1 NEAR                   | 6 pts · probation · jeton demerit-1 · caution 1.0000 NEAR · exigée 1.0000 NEAR                                                                                                                                                     | OK
+2 close clean              | missions_ok = 1, 6 pts                                        | missions_ok=1 · 6 pts · mission 1 close                                                                                                                                                                                            | OK
+3 close medium             | 3 pts                                                         | 3 pts · invalidations=0                                                                                                                                                                                                            | OK
+4 +6 mois (12 s)           | 4 pts : régénération                                          | 4 pts                                                                                                                                                                                                                              | OK
+5 close severe             | 0 pt, suspension 6 mois, fonds +0,20, client +0,20, coef 125  | 0 pts suspendu · suspension 12 s · fonds +0.2000 NEAR · client +0.2000 NEAR · coef 125 · invalidations=1                                                                                                                           | OK
+6 accept sous suspension   | refus ERR_LICENSE_SUSPENDED                                   | état=open accept=ERR_LICENSE_REFUSED registre=ERR_LICENSE_SUSPENDED                                                                                                                                                                | OK
+7 lea2, même empreinte     | refus ERR_IDENTITY_SUSPENDED                                  | code ERR_IDENTITY_SUSPENDED                                                                                                                                                                                                        | OK
+8 réhabilitation, caution  | 6 pts probation, inval. 1, sous-garanti refusé puis accepté   | 6 pts probation · invalidations=1 · sous-garanti 0.6000 NEAR < 1.2500 NEAR · 1er accept: état=open accept=ERR_LICENSE_REFUSED registre=ERR_UNDER_BONDED · 2e accept: état=taken · caution 1.2500 NEAR = exigée 1.2500 NEAR         | OK
+9 nft_transfer             | refus ERR_SOULBOUND                                           | code ERR_SOULBOUND                                                                                                                                                                                                                 | OK
+I2 conservation            | équilibré après chaque étape (9)                              | 9/9 étapes équilibrées                                                                                                                                                                                                             | OK
+funds: fonds 0.2000 NEAR + cautions et crédits 1.2500 NEAR + missions 0.0000 NEAR = 1.4500 NEAR | versements 1.6500 NEAR - retraits 0.2000 NEAR = 1.4500 NEAR -> OK
+DEMO OK (10/10)
+--- end output ---
+ended   : 2026-11-14T14:27:58Z
+EXIT 0
