@@ -16,19 +16,26 @@
     return n > 1e12 ? Math.floor(n / 1e9) : n;
   }
 
-  /* Yocto strings (contracts) or NEAR floats (sandbox) → NEAR number. */
-  function toNear(value) {
-    if (value === null || value === undefined || value === '') return 0;
-    var raw = String(value).trim();
+  /* One parse for both shapes the amounts arrive in: yocto strings on chain
+     (1 NEAR = 1e24 yocto) and NEAR floats in the demo sandbox. `text` keeps
+     every digit — printing a 0.045 deposit as "0.04" would contradict the
+     receipt the explorer shows; `number` is for the lines that compare values. */
+  function near(value) {
+    var raw = String(value === null || value === undefined ? '' : value).trim();
+    if (raw === '') return { text: '0', number: 0 };
     if (/^\d+$/.test(raw)) {
-      var parts = raw.replace(/^0+(?=\d)/, '').padStart(25, '0');
-      var whole = parts.slice(0, -24).replace(/^0+(?=\d)/, '');
-      var frac = parts.slice(-24).replace(/0+$/, '');
-      return Number((whole || '0') + (frac ? '.' + frac : ''));
+      var digits = raw.replace(/^0+(?=\d)/, '').padStart(25, '0');
+      var whole = digits.slice(0, -24).replace(/^0+(?=\d)/, '') || '0';
+      var frac = digits.slice(-24).replace(/0+$/, '');
+      return { text: frac ? whole + '.' + frac : whole, number: Number(whole + (frac ? '.' + frac : '')) };
     }
     var n = Number(raw);
-    return isNaN(n) ? 0 : n;
+    return isNaN(n) ? { text: '0', number: 0 } : { text: String(n), number: n };
   }
+
+  function toNear(value) { return near(value).number; }
+
+  function amountText(value) { return near(value).text; }
 
   /* Never "undefined": a missing field reads as an em dash. */
   function text(value) {
@@ -36,13 +43,18 @@
     return String(value);
   }
 
+  /* The hour is printed too: the deployed category compresses a month into
+     600 s (rules.month_seconds = 6e11, read from create_category on testnet),
+     so a six-month suspension lands the same day and only the minute tells
+     when the licence comes back. */
   function date(ts) {
     var s = toSeconds(ts);
     if (!s) return '—';
     var d = new Date(s * 1000);
-    return isNaN(d.getTime())
-      ? '—'
-      : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (isNaN(d.getTime())) return '—';
+    var day = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    var hm = String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+    return day + ' ' + hm + ' UTC';
   }
 
   /* The missions contract wraps its payload in an array; the registry does not. */
@@ -74,25 +86,25 @@
       return 'license_renounced';
     },
     bond_slashed: function (d) {
-      return 'bond_slashed · ' + toNear(d.amount).toFixed(2) + ' Ⓝ';
+      return 'bond_slashed · ' + amountText(d.amount) + ' Ⓝ';
     },
     client_compensated: function (d) {
-      return 'client_compensated · ' + toNear(d.amount).toFixed(2) + ' Ⓝ → ' + text(d.client);
+      return 'client_compensated · ' + amountText(d.amount) + ' Ⓝ → ' + text(d.client);
     },
     bond_topped_up: function (d) {
-      return 'bond_topped_up · ' + toNear(d.amount).toFixed(2) + ' Ⓝ';
+      return 'bond_topped_up · ' + amountText(d.amount) + ' Ⓝ';
     },
     bond_excess_withdrawn: function (d) {
-      return 'bond_excess_withdrawn · ' + toNear(d.amount).toFixed(2) + ' Ⓝ';
+      return 'bond_excess_withdrawn · ' + amountText(d.amount) + ' Ⓝ';
     },
     withdrawn: function (d) {
-      return 'withdrawn · ' + toNear(d.amount).toFixed(2) + ' Ⓝ → ' + text(d.account);
+      return 'withdrawn · ' + amountText(d.amount) + ' Ⓝ → ' + text(d.account);
     },
     delegation_changed: function (d) {
       return 'delegation_changed · ' + text(d.delegate);
     },
     contest_opened: function (d) {
-      return 'contest_opened · ' + text(d.mission_id) + ' · ' + toNear(d.deposit).toFixed(2) + ' Ⓝ';
+      return 'contest_opened · ' + text(d.mission_id) + ' · ' + amountText(d.deposit) + ' Ⓝ';
     },
     contest_resolved: function (d) {
       return 'contest_resolved · ' + text(d.mission_id) + ' · ' + (d.upheld ? 'upheld' : 'refused');
@@ -104,7 +116,7 @@
       return 'platform_struck · ' + text(d.account) + ' · ' + text(d.warnings) + ' warning(s)';
     },
     mission_posted: function (d) {
-      return 'mission_posted · #' + text(d.id) + ' · ' + toNear(d.reward).toFixed(2) + ' Ⓝ in escrow';
+      return 'mission_posted · #' + text(d.id) + ' · ' + amountText(d.reward) + ' Ⓝ in escrow';
     },
     mission_taken: function (d) {
       return 'mission_taken · #' + text(d.id);
@@ -145,6 +157,7 @@
     format: format,
     parseLogs: parseLogs,
     toNear: toNear,
+    amountText: amountText,
     toSeconds: toSeconds,
     text: text,
     date: date
