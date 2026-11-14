@@ -46,7 +46,7 @@
   function mount() {
     var main = document.getElementById('main');
     if (!main || location.hash.indexOf('#/licence') !== 0) return;
-    if (main.querySelector('#demoLicences')) { fill(); return; }
+    if (main.querySelector('#demoLicences')) return;
     var el = document.createElement('div');
     el.innerHTML = card();
     main.insertBefore(el.firstChild, main.firstChild);
